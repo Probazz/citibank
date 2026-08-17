@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  SUSPENDED
+  PENDING
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  TRANSFER_IN
+  TRANSFER_OUT
+  WITHDRAWAL
+  DEPOSIT
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  password             String
+  firstName            String
+  lastName             String
+  phone                String?
+  dateOfBirth          String?
+  address              String?
+  city                 String?
+  state                String?
+  country              String    @default("United States")
+  role                 Role      @default(USER)
+  transactionPin       String?
+  isEmailVerified      Boolean   @default(false)
+  otpCode              String?
+  otpExpires           DateTime?
+  resetToken           String?
+  resetTokenExpires    DateTime?
+  darkMode             Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  account              Account?
+  sentTransactions     Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+  withdrawalRequests   WithdrawalRequest[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+}
+
+model Account {
+  id             String        @id @default(cuid())
+  accountNumber  String        @unique
+  routingNumber  String        @default("021000089")
+  swiftCode      String        @default("CITIUS33")
+  balance        Float         @default(0)
+  savingsBalance Float         @default(0)
+  status         AccountStatus @default(ACTIVE)
+  accountType    String        @default("Checking")
+  userId         String        @unique
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  cards          Card[]
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  cardNumber  String   @unique
+  cardHolder  String
+  expiryMonth String
+  expiryYear  String
+  cvv         String
+  cardType    String   @default("VISA")
+  isActive    Boolean  @default(true)
+  isFrozen    Boolean  @default(false)
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  reference     String            @unique
+  type          TransactionType
+  status        TransactionStatus @default(COMPLETED)
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  description   String
+  note          String?
+  category      String?
+  recipientBank String?
+  recipientName String?
+  senderId      String?
+  sender        User?             @relation("SentTransactions", fields: [senderId], references: [id])
+  receiverId    String?
+  receiver      User?             @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  metadata      String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model WithdrawalRequest {
+  id            String           @id @default(cuid())
+  amount        Float
+  bankName      String
+  accountName   String
+  accountNumber String
+  status        WithdrawalStatus @default(PENDING)
+  note          String?
+  adminNote     String?
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   @default("info")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  action       String
+  details      String
+  ipAddress    String?
+  adminId      String?
+  admin        User?    @relation(fields: [adminId], references: [id])
+  targetUserId String?
+  createdAt    DateTime @default(now())
+}
