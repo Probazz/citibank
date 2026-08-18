@@ -46,15 +46,18 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.firstName = (user as any).firstName;
         token.lastName = (user as any).lastName;
+        token.accountStatus = (user as any).accountStatus;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.firstName = token.firstName as string;
-        session.user.lastName = token.lastName as string;
+      if (token && session.user) {
+        const userPayload = session.user as any;
+        userPayload.id = token.id as string;
+        userPayload.role = token.role as string;
+        userPayload.firstName = token.firstName as string;
+        userPayload.lastName = token.lastName as string;
+        userPayload.accountStatus = token.accountStatus as string;
       }
       return session;
     },

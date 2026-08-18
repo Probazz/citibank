@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/options';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { Sidebar } from '@/components/dashboard/sidebar';
@@ -11,8 +11,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
-  if (!session) redirect('/auth/login');
-  if (session.user.role === 'ADMIN') redirect('/admin');
+  if (!session?.user?.id) redirect('/auth/login');
+
+  const role = session.user.role || 'USER';
+  if (role === 'ADMIN') redirect('/admin');
 
   const unread = await prisma.notification.count({
     where: { userId: session.user.id, isRead: false },
