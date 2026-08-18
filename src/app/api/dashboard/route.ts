@@ -2,58 +2,105 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateAccountNumber, generateCardNumber } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in again.' }, { status: 401 });
+    }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      account: { include: { cards: true } },
-    },
-  });
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { account: { include: { cards: true } } },
+    });
 
-  if (!user?.account) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
 
-  const [recentTransactions, unreadCount, withdrawals] = await Promise.all([
-    prisma.transaction.findMany({
-      where: { OR: [{ senderId: session.user.id }, { receiverId: session.user.id }] },
-      include: {
-        sender:   { select: { firstName: true, lastName: true } },
-        receiver: { select: { firstName: true, lastName: true } },
+    let account = user.account;
+    if (!account) {
+      const generatedAccountNumber = generateAccountNumber();
+      const generatedCardNumber = generateCardNumber();
+
+      account = await prisma.account.create({
+        data: {
+          userId: user.id,
+          accountNumber: generatedAccountNumber,
+          balance: 0,
+          savingsBalance: 0,
+          status: 'ACTIVE',
+          accountType: 'Checking',
+          cards: {
+            create: {
+              cardNumber: generatedCardNumber,
+              cardHolder: `${user.firstName} ${user.lastName}`.toUpperCase(),
+              expiryMonth: '12',
+              expiryYear: '2029',
+              cvv: Math.floor(100 + Math.random() * 900).toString(),
+              cardType: 'VISA',
+            },
+          },
+        },
+        include: { cards: true },
+      });
+
+      await prisma.notification.create({
+        data: {
+          title: 'Welcome to Citi! 🎉',
+          message: `Your checking account ending in ${generatedAccountNumber.slice(-4)} is ready. Your routing number is 021000089.`,
+          type: 'success',
+          userId: user.id,
+        },
+      });
+    }
+
+    const [recentTransactions, unreadCount, withdrawals] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { OR: [{ senderId: session.user.id }, { receiverId: session.user.id }] },
+        include: {
+          sender: { select: { firstName: true, lastName: true } },
+          receiver: { select: { firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+      prisma.notification.count({ where: { userId: session.user.id, isRead: false } }),
+      prisma.withdrawalRequest.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+      }),
+    ]);
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
       },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    }),
-    prisma.notification.count({ where: { userId: session.user.id, isRead: false } }),
-    prisma.withdrawalRequest.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
-    }),
-  ]);
-
-  return NextResponse.json({
-    user: {
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-    },
-    account: {
-      id: user.account.id,
-      accountNumber: user.account.accountNumber,
-      routingNumber: user.account.routingNumber,
-      balance: user.account.balance,
-      savingsBalance: user.account.savingsBalance,
-      status: user.account.status,
-      accountType: user.account.accountType,
-      cards: user.account.cards,
-    },
-    recentTransactions,
-    unreadNotifications: unreadCount,
-    withdrawals,
-  });
+      account: {
+        id: account.id,
+        accountNumber: account.accountNumber,
+        routingNumber: account.routingNumber,
+        balance: account.balance,
+        savingsBalance: account.savingsBalance,
+        status: account.status,
+        accountType: account.accountType,
+        cards: account.cards,
+      },
+      recentTransactions,
+      unreadNotifications: unreadCount,
+      withdrawals,
+    });
+  } catch (error) {
+    console.error('Dashboard fetch error:', error);
+    return NextResponse.json({ error: 'Failed to load account data.' }, { status: 500 });
+  }
 }

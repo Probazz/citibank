@@ -12,15 +12,26 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData]             = useState<any>(null);
   const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string>('');
   const [hideBalance, setHideBalance] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   async function loadData() {
     try {
-      const res  = await fetch('/api/dashboard');
-      const json = await res.json();
-      setData(json);
-    } catch {}
+      const res = await fetch('/api/dashboard');
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json) {
+        setData(null);
+        setError(json?.error || 'Failed to load account data.');
+      } else {
+        setData(json);
+        setError('');
+      }
+    } catch {
+      setData(null);
+      setError('Failed to load account data.');
+    }
     setLoading(false);
     setRefreshing(false);
   }
@@ -28,7 +39,20 @@ export default function DashboardPage() {
   useEffect(() => { loadData(); }, []);
 
   if (loading) return <PageLoading />;
-  if (!data)   return <div className="text-center py-20 text-citi-gray-500">Failed to load account data.</div>;
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-6 text-citi-red shadow-sm">
+        <p className="text-lg font-bold">Unable to load account data</p>
+        <p className="mt-2 text-sm text-red-700">{error || 'Failed to load account data.'}</p>
+        <button
+          onClick={() => { setLoading(true); loadData(); }}
+          className="mt-4 rounded-lg bg-citi-blue px-4 py-2 text-sm font-semibold text-white hover:bg-citi-blue-dark"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
 
   const { account, recentTransactions, user } = data;
   const isFrozen    = account?.status === 'FROZEN';
