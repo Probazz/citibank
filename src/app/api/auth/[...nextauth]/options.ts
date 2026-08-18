@@ -24,6 +24,14 @@ export const authOptions: NextAuthOptions = {
         if (user.account?.status === 'SUSPENDED') {
           throw new Error('ACCOUNT_SUSPENDED');
         }
+
+        try {
+          const { sendLoginNotification } = await import('@/lib/email');
+          await sendLoginNotification(user.email, user.firstName);
+        } catch (error) {
+          console.error('Login notification email failed:', error);
+        }
+
         return {
           id: user.id,
           email: user.email,

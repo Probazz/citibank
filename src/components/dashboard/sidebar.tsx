@@ -106,10 +106,10 @@ export function Sidebar({ unread = 0 }: { unread?: number }) {
           </div>
         </button>
 
-        <Link href="#" className="nav-item">
+        <a href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'probazzelendeme523@gmail.com'}?subject=Citi%20Support%20Request`} className="nav-item">
           <HelpCircle className="w-4 h-4" />
           <span>Help & Support</span>
-        </Link>
+        </a>
 
         <button
           onClick={() => signOut({ callbackUrl: '/auth/login' })}

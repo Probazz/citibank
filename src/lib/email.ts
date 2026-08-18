@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || 'Citi Bank <onboarding@resend.dev>';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'probazzelendeme523@gmail.com';
 const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
@@ -55,6 +56,63 @@ function baseTemplate(content: string) {
     <p>© ${new Date().getFullYear()} Citibank, N.A. Member FDIC.</p>
     <p>This is an automated message. Please do not reply.</p>
   </div></div></body></html>`;
+}
+
+export async function sendLoginNotification(email: string, firstName: string, ipAddress?: string) {
+  const content = `
+    <h2 class="title">Successful login</h2>
+    <p class="text">Hi <strong>${firstName}</strong>, we detected a successful sign-in to your Citi account.</p>
+    <div class="otp-box" style="text-align:left;padding:20px 24px">
+      <p style="font-size:13px;color:#5F6368">Login time</p>
+      <p style="font-size:18px;font-weight:700;color:#003B70;margin-top:6px">${new Date().toLocaleString('en-US')}</p>
+      ${ipAddress ? `<p style="font-size:13px;color:#5F6368;margin-top:12px">IP address</p><p style="font-size:16px;font-weight:700;color:#003B70;margin-top:6px">${ipAddress}</p>` : ''}
+    </div>
+    <div class="warning"><p>If this was not you, change your password immediately and contact support at <a href="mailto:${SUPPORT_EMAIL}" style="color:#003B70;text-decoration:none;font-weight:700">${SUPPORT_EMAIL}</a>.</p></div>
+    <div class="divider"></div>
+    <p class="small">Need help? Reply to this email and our support team will assist you.</p>`;
+
+  await sendEmail({
+    to: email,
+    subject: 'Successful login to your Citi account',
+    html: baseTemplate(content),
+    text: `Your Citi account was successfully accessed at ${new Date().toLocaleString('en-US')}. If this was not you, contact support at ${SUPPORT_EMAIL}.`,
+  });
+}
+
+export async function sendPasswordChangedEmail(email: string, firstName: string) {
+  const content = `
+    <h2 class="title">Password updated</h2>
+    <p class="text">Hi <strong>${firstName}</strong>, your Citi account password was changed successfully.</p>
+    <div class="otp-box" style="text-align:left;padding:20px 24px">
+      <p style="font-size:13px;color:#5F6368">Updated at</p>
+      <p style="font-size:18px;font-weight:700;color:#003B70;margin-top:6px">${new Date().toLocaleString('en-US')}</p>
+    </div>
+    <div class="warning"><p>If you did not make this change, contact support immediately at <a href="mailto:${SUPPORT_EMAIL}" style="color:#003B70;text-decoration:none;font-weight:700">${SUPPORT_EMAIL}</a>.</p></div>`;
+
+  await sendEmail({
+    to: email,
+    subject: 'Your Citi password was updated',
+    html: baseTemplate(content),
+    text: `Your Citi password was changed successfully at ${new Date().toLocaleString('en-US')}. If this was not you, contact support at ${SUPPORT_EMAIL}.`,
+  });
+}
+
+export async function sendSupportReplyEmail(email: string, name: string, message: string) {
+  const content = `
+    <h2 class="title">Support request received</h2>
+    <p class="text">Hi <strong>${name}</strong>, we have received your message and our support team will get back to you shortly.</p>
+    <div class="otp-box" style="text-align:left;padding:20px 24px">
+      <p style="font-size:13px;color:#5F6368">Your message</p>
+      <p style="font-size:15px;line-height:1.7;color:#003B70;margin-top:8px">${message}</p>
+    </div>
+    <p class="small">For urgent assistance, email <a href="mailto:${SUPPORT_EMAIL}" style="color:#003B70;text-decoration:none;font-weight:700">${SUPPORT_EMAIL}</a>.</p>`;
+
+  await sendEmail({
+    to: email,
+    subject: 'Citi support has received your message',
+    html: baseTemplate(content),
+    text: `Your support message has been received. Our team will reply soon. For urgent help, contact ${SUPPORT_EMAIL}.`,
+  });
 }
 
 export async function sendLoginOTP(email: string, firstName: string, otp: string) {

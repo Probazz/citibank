@@ -24,6 +24,13 @@ export async function POST(req: NextRequest) {
     if (type === 'reset' && newPassword) {
       if (newPassword.length < 8) return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       updateData.password = await bcrypt.hash(newPassword, 12);
+
+      try {
+        const { sendPasswordChangedEmail } = await import('@/lib/email');
+        await sendPasswordChangedEmail(user.email, user.firstName);
+      } catch (error) {
+        console.error('Password change email failed:', error);
+      }
     }
 
     await prisma.user.update({ where: { id: user.id }, data: updateData });
