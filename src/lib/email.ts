@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const FROM = `"Citi Bank" <${process.env.GMAIL_USER}>`;
-const APP_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 function baseTemplate(content: string) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
