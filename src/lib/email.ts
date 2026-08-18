@@ -1,15 +1,28 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
-
-const FROM = `"Citi Bank" <${process.env.GMAIL_USER}>`;
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.EMAIL_FROM || 'Citi Bank <onboarding@resend.dev>';
 const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn('RESEND_API_KEY is not configured. Email not sent.');
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: [to],
+    subject,
+    html,
+    text,
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Failed to send email via Resend.');
+  }
+}
 
 function baseTemplate(content: string) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
@@ -44,11 +57,6 @@ function baseTemplate(content: string) {
   </div></div></body></html>`;
 }
 
-transporter.verify((error, success) => {
-  if (error) console.error('❌ Email error:', error);
-  else console.log('✅ Email service ready');
-});
-
 export async function sendLoginOTP(email: string, firstName: string, otp: string) {
   const content = `
     <h2 class="title">Verify your identity</h2>
@@ -60,7 +68,12 @@ export async function sendLoginOTP(email: string, firstName: string, otp: string
     <div class="warning"><p>⚠️ Never share this code. Citi will never ask for your OTP.</p></div>
     <div class="divider"></div>
     <p class="small">If you did not attempt to sign in, change your password immediately.</p>`;
-  await transporter.sendMail({ from: FROM, to: email, subject: `${otp} is your Citi verification code`, html: baseTemplate(content) });
+  await sendEmail({
+    to: email,
+    subject: `${otp} is your Citi verification code`,
+    html: baseTemplate(content),
+    text: `Your Citi verification code is ${otp}. It expires in 10 minutes.`,
+  });
 }
 
 export async function sendPasswordResetOTP(email: string, firstName: string, otp: string) {
@@ -72,7 +85,12 @@ export async function sendPasswordResetOTP(email: string, firstName: string, otp
       <div class="otp-expire">Expires in <strong>10 minutes</strong></div>
     </div>
     <div class="warning"><p>⚠️ If you did not request this, ignore this email.</p></div>`;
-  await transporter.sendMail({ from: FROM, to: email, subject: `Reset your Citi password — Code: ${otp}`, html: baseTemplate(content) });
+  await sendEmail({
+    to: email,
+    subject: `Reset your Citi password — Code: ${otp}`,
+    html: baseTemplate(content),
+    text: `Your Citi password reset code is ${otp}. It expires in 10 minutes.`,
+  });
 }
 
 export async function sendWelcomeEmail(email: string, firstName: string, accountNumber: string) {
@@ -88,7 +106,12 @@ export async function sendWelcomeEmail(email: string, firstName: string, account
       <p style="font-size:18px;font-weight:700;color:#003B70;font-family:monospace">CITIUS33</p>
     </div>
     <a href="${APP_URL}/dashboard" class="btn">Go to My Account →</a>`;
-  await transporter.sendMail({ from: FROM, to: email, subject: `Welcome to Citi — Your account is ready`, html: baseTemplate(content) });
+  await sendEmail({
+    to: email,
+    subject: `Welcome to Citi — Your account is ready`,
+    html: baseTemplate(content),
+    text: `Welcome to Citi. Your new account is ready.`,
+  });
 }
 
 export async function sendTransactionReceipt({ email, firstName, amount, type, description, reference, balanceAfter, recipientName, recipientBank, date }: {
@@ -118,5 +141,10 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
       ].map(([l,v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0"><span style="font-size:13px;color:#80868B">${l}</span><span style="font-size:13px;font-weight:600">${v}</span></div>`).join('')}
     </div>
     <a href="${APP_URL}/dashboard/transactions" class="btn">View Transactions →</a>`;
-  await transporter.sendMail({ from: FROM, to: email, subject: `Transaction ${isCredit?'Received':'Sent'}: ${sign}$${amount.toFixed(2)} — Ref: ${reference}`, html: baseTemplate(content) });
+  await sendEmail({
+    to: email,
+    subject: `Transaction ${isCredit?'Received':'Sent'}: ${sign}$${amount.toFixed(2)} — Ref: ${reference}`,
+    html: baseTemplate(content),
+    text: `Your transaction of ${sign}$${amount.toFixed(2)} has been processed successfully. Reference: ${reference}`,
+  });
 }
