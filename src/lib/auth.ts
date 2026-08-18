@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/login',
   },
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'citibank-local-dev-secret-change-me',
 };
 
 declare module 'next-auth' {
