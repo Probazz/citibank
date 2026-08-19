@@ -74,8 +74,8 @@ export default function DashboardPage() {
         <div className="p-4 bg-citi-red-light border border-red-200 rounded-xl">
           <p className="text-citi-red font-semibold text-sm">
             {isFrozen
-              ? '🔒 Your account is frozen. You can view your balance but cannot make transactions. Contact support at 1-800-374-9700.'
-              : '⚠️ Your account is suspended. Contact support immediately at 1-800-374-9700.'}
+              ? '🔒Access Denied: Your account is currently under regulatory review. Deposit-only mode is active.'
+              : '⚠️ Your account is suspended. Contact support immediately.'}
           </p>
         </div>
       )}
