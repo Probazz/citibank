@@ -14,7 +14,10 @@ const fundSchema = z.object({
   type: z.enum(['ADMIN_CREDIT', 'ADMIN_DEBIT']),
   description: z.string().min(1),
   note: z.string().optional(),
+  creditedBy: z.string().trim().max(100).optional(),
 });
+
+const creditingCompanies = ['Northstar Financial', 'Cedarstone Holdings', 'Apex Meridian Group', 'Summit Bridge Capital'];
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -36,6 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Insufficient balance. Current balance is $${balanceBefore.toFixed(2)}` }, { status: 400 });
 
     const reference = generateReference();
+    const creditedBy = data.creditedBy || creditingCompanies[Math.floor(Math.random() * creditingCompanies.length)];
 
     await prisma.$transaction([
       prisma.account.update({ where: { id: user.account.id }, data: { balance: balanceAfter } }),
@@ -49,6 +53,7 @@ export async function POST(req: NextRequest) {
           balanceAfter,
           description: data.description,
           note: data.note,
+          metadata: isCredit ? JSON.stringify({ creditedBy }) : undefined,
           senderId: isCredit ? null : data.userId,
           receiverId: isCredit ? data.userId : null,
         },

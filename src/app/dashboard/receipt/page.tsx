@@ -15,6 +15,17 @@ export default function ReceiptPage() {
   const [error, setError]             = useState('');
   const id = searchParams.get('id');
 
+  function getCreditedBy(transaction: any) {
+    if (transaction?.type !== 'ADMIN_CREDIT' || !transaction.metadata) return '';
+    try { return JSON.parse(transaction.metadata).creditedBy || ''; } catch { return ''; }
+  }
+
+  function getDisplayTransactionType(type: string) {
+    if (type === 'ADMIN_CREDIT') return 'Credit';
+    if (type === 'ADMIN_DEBIT') return 'Debit';
+    return type?.replace(/_/g, ' ');
+  }
+
   useEffect(() => {
     if (!id) { setError('No transaction ID provided.'); setLoading(false); return; }
     fetch(`/api/receipts?id=${id}`)
@@ -38,10 +49,11 @@ export default function ReceiptPage() {
 
     const rows = [
       ['Reference Number', transaction.reference],
-      ['Transaction Type', transaction.type?.replace(/_/g, ' ')],
+      ['Transaction Type', getDisplayTransactionType(transaction.type)],
       ['Status',           transaction.status],
       ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
       ['Description',      transaction.description],
+      ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
       ...(transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
       ...(transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
       ...(transaction.note          ? [['Note',           transaction.note]]          : []),
@@ -151,10 +163,11 @@ export default function ReceiptPage() {
 
   const rows = [
     ['Reference Number', transaction.reference],
-    ['Transaction Type', transaction.type?.replace(/_/g, ' ')],
+    ['Transaction Type', getDisplayTransactionType(transaction.type)],
     ['Status',           transaction.status],
     ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
     ['Description',      transaction.description],
+    ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
     ...(transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
     ...(transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
     ...(transaction.note          ? [['Note',           transaction.note]]          : []),

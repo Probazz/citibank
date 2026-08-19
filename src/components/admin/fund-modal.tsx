@@ -18,11 +18,12 @@ export function FundModal({ isOpen, onClose, user, onSuccess }: FundModalProps) 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [note, setNote]   = useState('');
+  const [creditedBy, setCreditedBy] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  function reset() { setAmount(''); setDescription(''); setNote(''); setError(''); setSuccess(''); setType('ADMIN_CREDIT'); }
+  function reset() { setAmount(''); setDescription(''); setNote(''); setCreditedBy(''); setError(''); setSuccess(''); setType('ADMIN_CREDIT'); }
 
   async function handleSubmit() {
     if (!amount || parseFloat(amount) <= 0) { setError('Enter a valid amount.'); return; }
@@ -31,7 +32,7 @@ export function FundModal({ isOpen, onClose, user, onSuccess }: FundModalProps) 
     const res  = await fetch('/api/admin/fund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user?.id, amount: parseFloat(amount), type, description, note }),
+      body: JSON.stringify({ userId: user?.id, amount: parseFloat(amount), type, description, note, creditedBy }),
     });
     const data = await res.json();
     setLoading(false);
@@ -101,6 +102,9 @@ export function FundModal({ isOpen, onClose, user, onSuccess }: FundModalProps) 
             )}
           </div>
           <Input label="Description *" placeholder="e.g. Account top-up, Bonus credit, Fee reversal" value={description} onChange={e => setDescription(e.target.value)} />
+          {type === 'ADMIN_CREDIT' && (
+            <Input label="Credited by (Optional)" placeholder="e.g. Acme Corporation" value={creditedBy} onChange={e => setCreditedBy(e.target.value)} />
+          )}
           <Input label="Internal Note (Optional)" placeholder="Admin reference note..." value={note} onChange={e => setNote(e.target.value)} />
 
           <div className="flex gap-3 pt-2">

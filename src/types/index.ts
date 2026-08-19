@@ -28,6 +28,7 @@ export interface Transaction {
   balanceAfter: number;
   description: string;
   note?: string | null;
+  metadata?: string | null;
   category?: string | null;
   senderId?: string | null;
   receiverId?: string | null;
