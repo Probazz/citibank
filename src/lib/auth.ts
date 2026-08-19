@@ -24,8 +24,8 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        if (user.account?.status === 'FROZEN' || user.account?.status === 'SUSPENDED') {
-          throw new Error('ACCOUNT_FROZEN');
+        if (user.account?.status === 'SUSPENDED') {
+          throw new Error('ACCOUNT_SUSPENDED');
         }
 
         return {
