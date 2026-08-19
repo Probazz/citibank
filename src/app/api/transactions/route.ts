@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
     }
     if (sender.account.status === 'FROZEN') {
-      return NextResponse.json({ error: 'Your account is frozen. Contact support at 1-800-374-9700.' }, { status: 403 });
+      return NextResponse.json({ error: 'Your account is frozen. Contact support.' }, { status: 403 });
     }
     if (sender.account.status === 'SUSPENDED') {
       return NextResponse.json({ error: 'Your account is suspended.' }, { status: 403 });

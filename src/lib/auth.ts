@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('ACCOUNT_SUSPENDED');
         }
 
-        return {
+        return {    
           id: user.id,
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,

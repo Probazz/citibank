@@ -182,9 +182,9 @@ export default function DashboardPage() {
               {quickActions.map(({ label, icon: Icon, href, color, emoji }) => (
                 <Link
                   key={label}
-                  href={isFrozen || isSuspended ? '#' : href}
+                  href={isSuspended ? '#' : href}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors group ${
-                    isFrozen || isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-citi-gray-50'
+                    isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-citi-gray-50'
                   }`}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color} group-hover:scale-105 transition-transform shadow-sm`}>

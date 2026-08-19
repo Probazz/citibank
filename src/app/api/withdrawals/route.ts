@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
       include: { account: true },
     });
     if (!user?.account) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+    if (user.account.status === 'FROZEN') {
+      return NextResponse.json({ error: 'Access Denied: Your account is currently under regulatory review. Deposit-only mode is active.' }, { status: 403 });
+    }
     if (user.account.status !== 'ACTIVE') return NextResponse.json({ error: 'Account is not active.' }, { status: 403 });
     if (user.account.balance < data.amount) return NextResponse.json({ error: 'Insufficient funds.' }, { status: 400 });
 
