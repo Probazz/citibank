@@ -26,6 +26,6 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     if (error.name === 'ZodError') return NextResponse.json({ error: 'Please complete all fields correctly.' }, { status: 400 });
     console.error('Support request error:', error);
-    return NextResponse.json({ error: 'Unable to send your support request.' }, { status: 500 });
+    return NextResponse.json({ error: 'Support email service is unavailable. Please try again later.' }, { status: 503 });
   }
 }

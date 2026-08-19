@@ -8,8 +8,7 @@ const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('RESEND_API_KEY is not configured. Email not sent.');
-    return;
+    throw new Error('Resend email service is not configured.');
   }
 
   const { error } = await resend.emails.send({

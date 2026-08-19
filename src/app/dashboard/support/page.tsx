@@ -16,13 +16,6 @@ export default function SupportPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  function openDirectEmail() {
-    const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(`[${category}] ${subject}`)}&body=${encodeURIComponent(message)}`;
-    window.location.href = mailto;
-    setError('');
-    setSuccess(`Your email app is opening. Send the message to ${supportEmail} to submit your request.`);
-  }
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
@@ -36,7 +29,6 @@ export default function SupportPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        if (response.status >= 500) { openDirectEmail(); return; }
         setError(data.error || 'Unable to send your request.');
         return;
       }
@@ -44,7 +36,7 @@ export default function SupportPage() {
       setSubject('');
       setMessage('');
     } catch {
-      openDirectEmail();
+      setError('Unable to connect to support. Please try again.');
     } finally {
       setLoading(false);
     }

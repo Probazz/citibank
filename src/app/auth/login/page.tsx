@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     const res = await signIn('credentials', { ...form, redirect: false });
     if (res?.error === 'ACCOUNT_SUSPENDED') {
-      setError('Your account has been suspended. Contact support at citibanksupport4@gmail.com.');
+      setError('Your account has been suspended. Contact support.');
       setLoading(false);
       return;
     }
@@ -61,7 +61,7 @@ export default function LoginPage() {
 
       {/* Right panel */}
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-white lg:rounded-l-3xl">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md p-10">
           <div className="flex items-center mb-12 mt-3">
             <img
               src="/citibank-logo3.png"
