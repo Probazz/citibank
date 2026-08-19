@@ -75,7 +75,7 @@ export default function DashboardPage() {
           <p className="text-citi-red font-semibold text-sm">
             {isFrozen
               ? '🔒Access Denied: Your account is currently under regulatory review. Deposit-only mode is active.'
-              : '⚠️ Your account is suspended. Contact support immediately.'}
+              : '⚠️ Your account is suspended. Contact support immediately at citibanksupport4@gmail.com.'}
           </p>
         </div>
       )}

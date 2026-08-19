@@ -61,7 +61,12 @@ export async function GET(req: NextRequest) {
 
     const [recentTransactions, unreadCount, withdrawals] = await Promise.all([
       prisma.transaction.findMany({
-        where: { OR: [{ senderId: session.user.id }, { receiverId: session.user.id }] },
+        where: {
+          OR: [
+            { senderId: session.user.id, type: { not: 'TRANSFER_IN' } },
+            { receiverId: session.user.id, type: { not: 'TRANSFER_OUT' } },
+          ],
+        },
         include: {
           sender: { select: { firstName: true, lastName: true } },
           receiver: { select: { firstName: true, lastName: true } },

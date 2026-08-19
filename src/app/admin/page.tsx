@@ -39,7 +39,7 @@ export default function AdminPage() {
               <Icon className={`w-5 h-5 ${iconColor}`} />
             </div>
             <p className="text-xs font-semibold text-citi-gray-500 uppercase tracking-wide">{label}</p>
-            <p className="text-2xl font-black text-citi-gray-800 mt-1">{value}</p>
+            <p className="text-xl font-black text-citi-gray-800 mt-1 break-words leading-tight tabular-nums">{value}</p>
             <p className="text-xs text-citi-gray-400 mt-0.5">{sub}</p>
           </div>
         ))}
@@ -76,7 +76,7 @@ export default function AdminPage() {
                   <p className="text-xs text-citi-gray-400 truncate">{u.email}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-citi-gray-800">{formatCurrency(u.account?.balance || 0)}</p>
+                  <p className="text-sm font-bold text-citi-gray-800 break-all leading-tight tabular-nums">{formatCurrency(u.account?.balance || 0)}</p>
                   <Badge variant={u.account?.status === 'ACTIVE' ? 'success' : 'error'}>
                     {u.account?.status || 'NO ACCOUNT'}
                   </Badge>

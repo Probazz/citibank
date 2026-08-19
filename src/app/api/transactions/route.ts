@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
 
   const where: any = {
     OR: [
-      { senderId:   session.user.id },
-      { receiverId: session.user.id },
+      { senderId: session.user.id, type: { not: 'TRANSFER_IN' } },
+      { receiverId: session.user.id, type: { not: 'TRANSFER_OUT' } },
     ],
   };
   if (type) where.type = type;
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
     }
     if (sender.account.status === 'FROZEN') {
-      return NextResponse.json({ error: 'Your account is frozen. Contact support.' }, { status: 403 });
+      return NextResponse.json({ error: 'Your account is frozen. Contact support at citibanksupport4@gmail.com.' }, { status: 403 });
     }
     if (sender.account.status === 'SUSPENDED') {
       return NextResponse.json({ error: 'Your account is suspended.' }, { status: 403 });

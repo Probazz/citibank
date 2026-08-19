@@ -30,6 +30,8 @@ export interface Transaction {
   note?: string | null;
   metadata?: string | null;
   category?: string | null;
+  recipientBank?: string | null;
+  recipientName?: string | null;
   senderId?: string | null;
   receiverId?: string | null;
   createdAt: Date;

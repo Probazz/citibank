@@ -70,3 +70,26 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ message: `Account ${status.toLowerCase()} successfully.` });
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'ADMIN')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { userId } = await req.json();
+  if (!userId) return NextResponse.json({ error: 'User ID required.' }, { status: 400 });
+  if (userId === session.user.id) return NextResponse.json({ error: 'You cannot delete your own admin account.' }, { status: 400 });
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } });
+  if (!user || user.role !== 'USER') return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+
+  await prisma.$transaction([
+    prisma.transaction.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }),
+    prisma.withdrawalRequest.deleteMany({ where: { userId } }),
+    prisma.notification.deleteMany({ where: { userId } }),
+    prisma.auditLog.deleteMany({ where: { OR: [{ adminId: userId }, { targetUserId: userId }] } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
+
+  return NextResponse.json({ message: 'User deleted successfully.' });
+}

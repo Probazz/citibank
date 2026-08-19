@@ -56,6 +56,21 @@ export default function AdminUsersPage() {
     else showToast(data.error || 'Failed.', 'error');
   }
 
+  async function deleteUser(user: any) {
+    if (!window.confirm(`Delete ${user.firstName} ${user.lastName} and all related records? This cannot be undone.`)) return;
+    setActionLoading(`delete-${user.id}`);
+    const res = await fetch('/api/admin/users', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    const data = await res.json();
+    setActionLoading('');
+    if (res.ok) showToast(data.message, 'success');
+    else showToast(data.error || 'Delete failed.', 'error');
+    if (res.ok) load();
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
@@ -130,6 +145,9 @@ export default function AdminUsersPage() {
                       </Button>
                       <Button size="sm" variant={user.account?.status==='ACTIVE'?'danger':'ghost'} loading={actionLoading===user.id} onClick={() => toggleStatus(user)}>
                         {user.account?.status==='ACTIVE'?<><Snowflake className="w-3.5 h-3.5"/>Freeze</>:<><ShieldCheck className="w-3.5 h-3.5"/>Unfreeze</>}
+                      </Button>
+                      <Button size="sm" variant="danger" loading={actionLoading===`delete-${user.id}`} onClick={() => deleteUser(user)}>
+                        <Trash2 className="w-3.5 h-3.5"/>Delete
                       </Button>
                     </div>
                   </td>

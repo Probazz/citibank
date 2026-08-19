@@ -29,6 +29,9 @@ export function TransactionItem({ transaction: t, userId }: TransactionItemProps
       displayDescription = t.description;
     }
   }
+  if (t.type === 'TRANSFER_OUT' && t.recipientName) {
+    displayDescription = t.recipientName;
+  }
 
   return (
     <div className="flex items-center gap-4 py-4 border-b border-citi-gray-100 last:border-0 hover:bg-citi-gray-50 px-2 -mx-2 rounded-lg transition-colors cursor-pointer">

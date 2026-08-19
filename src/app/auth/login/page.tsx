@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     const res = await signIn('credentials', { ...form, redirect: false });
     if (res?.error === 'ACCOUNT_SUSPENDED') {
-      setError('Your account has been suspended. Contact support.');
+      setError('Your account has been suspended. Contact support at citibanksupport4@gmail.com.');
       setLoading(false);
       return;
     }

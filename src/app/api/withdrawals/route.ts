@@ -118,7 +118,7 @@ export async function PATCH(req: NextRequest) {
         title: isApproved ? '✅ Withdrawal Approved' : '❌ Withdrawal Rejected',
         message: isApproved
           ? `Your withdrawal of $${withdrawal.amount.toFixed(2)} has been approved and processed.`
-          : `Your withdrawal of $${withdrawal.amount.toFixed(2)} was rejected. ${adminNote || 'Contact support.'}`,
+          : `Your withdrawal of $${withdrawal.amount.toFixed(2)} was rejected. ${adminNote || 'Contact support at citibanksupport4@gmail.com.'}`,
         type: isApproved ? 'success' : 'error',
         userId: withdrawal.userId,
       },

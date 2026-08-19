@@ -19,7 +19,6 @@ export default function TransferPage() {
   const [pin, setPin]         = useState('');
   const [reference, setReference]   = useState('');
   const [txId, setTxId]             = useState('');
-  const [newBalance, setNewBalance] = useState(0);
   const [form, setForm] = useState({
     recipientAccountNumber: '',
     recipientName: '',
@@ -87,7 +86,6 @@ export default function TransferPage() {
       }
       setReference(data.reference);
       setTxId(data.transactionId || '');
-      setNewBalance(data.newBalance);
       setStep('success');
     } catch {
       setError('Something went wrong. Please try again.');
@@ -120,7 +118,6 @@ export default function TransferPage() {
               ...(form.recipientBank ? [['Bank', form.recipientBank]] : []),
               ['Description',    form.description],
               ['Reference',      reference],
-              ['New Balance',    formatCurrency(newBalance)],
               ['Status',         '✓ Completed'],
               ['Date & Time',    new Date().toLocaleString('en-US')],
             ].map(([l, v]) => (

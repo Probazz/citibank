@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || 'Citi Bank <onboarding@resend.dev>';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'probazzelendeme523@gmail.com';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'citibanksupport4@gmail.com';
 const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text: string }) {
@@ -204,5 +204,24 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
     subject: `Transaction ${isCredit?'Received':'Sent'}: ${sign}$${amount.toFixed(2)} — Ref: ${reference}`,
     html: baseTemplate(content),
     text: `Your transaction of ${sign}$${amount.toFixed(2)} has been processed successfully. Reference: ${reference}`,
+  });
+}
+
+export async function sendSupportRequestEmail({ email, name, category, subject, message }: {
+  email: string; name: string; category: string; subject: string; message: string;
+}) {
+  await sendEmail({
+    to: SUPPORT_EMAIL,
+    subject: `[Support] ${category}: ${subject}`,
+    html: baseTemplate(`
+      <h2 class="title">New support request</h2>
+      <p class="text"><strong>From:</strong> ${name} (${email})</p>
+      <p class="text"><strong>Category:</strong> ${category}</p>
+      <p class="text"><strong>Subject:</strong> ${subject}</p>
+      <div class="otp-box" style="text-align:left;padding:20px 24px">
+        <p style="font-size:13px;color:#5F6368">Message</p>
+        <p style="font-size:15px;line-height:1.7;color:#003B70;margin-top:8px">${message}</p>
+      </div>`),
+    text: `New support request\nFrom: ${name} (${email})\nCategory: ${category}\nSubject: ${subject}\n\n${message}`,
   });
 }

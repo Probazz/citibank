@@ -78,7 +78,7 @@ export default function SettingsPage() {
                   <Input label="Last Name" defaultValue={session?.user?.lastName} disabled />
                 </div>
                 <Input label="Email Address" defaultValue={session?.user?.email} disabled />
-                <p className="text-xs text-citi-gray-400">To update your information, contact support at 1-800-374-9700.</p>
+                <p className="text-xs text-citi-gray-400">To update your information, contact support at citibanksupport4@gmail.com.</p>
               </div>
             </div>
           )}

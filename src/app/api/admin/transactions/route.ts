@@ -33,3 +33,22 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ transactions, total, page, pages: Math.ceil(total / limit) });
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'ADMIN')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { transactionId } = await req.json();
+  if (!transactionId) return NextResponse.json({ error: 'Transaction ID required.' }, { status: 400 });
+
+  // Only remove the selected transaction row. User and account records are never touched here.
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { id: true },
+  });
+  if (!transaction) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 });
+
+  await prisma.transaction.delete({ where: { id: transactionId } });
+  return NextResponse.json({ message: 'Transaction deleted successfully.' });
+}

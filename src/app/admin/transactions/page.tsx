@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, Edit } from 'lucide-react';
+import { Search, Edit, Trash2 } from 'lucide-react';
 import { TransactionItem } from '@/components/dashboard/transaction-item';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
@@ -68,6 +68,20 @@ export default function AdminTransactionsPage() {
     } else {
       showToast(data.error || 'Update failed.', 'error');
     }
+  }
+
+  async function deleteTransaction(transaction: any) {
+    if (!window.confirm(`Delete transaction ${transaction.reference}? This cannot be undone.`)) return;
+    setEditLoading(true);
+    const res = await fetch('/api/admin/transactions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transactionId: transaction.id }),
+    });
+    const data = await res.json();
+    setEditLoading(false);
+    if (res.ok) { showToast('Transaction deleted successfully!', 'success'); load(); }
+    else showToast(data.error || 'Delete failed.', 'error');
   }
 
   const filtered = search
@@ -153,6 +167,12 @@ export default function AdminTransactionsPage() {
                       className="text-xs text-citi-gray-500 font-medium bg-citi-gray-100 px-2.5 py-1 rounded-lg hover:bg-citi-gray-200 transition-all"
                     >
                       Receipt
+                    </button>
+                    <button
+                      onClick={() => deleteTransaction(t)}
+                      className="flex items-center gap-1 text-xs text-citi-red font-medium bg-citi-red-light px-2.5 py-1 rounded-lg hover:bg-citi-red hover:text-white transition-all"
+                    >
+                      <Trash2 className="w-3 h-3" /> Delete
                     </button>
                   </div>
                 </div>
