@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   const [users, setUsers]       = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -142,6 +144,9 @@ export default function AdminUsersPage() {
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setDetailUser(user)}>
                         <Eye className="w-3.5 h-3.5"/> View
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => router.push(`/admin/users/${user.id}`)}>
+                        Dashboard
                       </Button>
                       <Button size="sm" variant={user.account?.status==='ACTIVE'?'danger':'ghost'} loading={actionLoading===user.id} onClick={() => toggleStatus(user)}>
                         {user.account?.status==='ACTIVE'?<><Snowflake className="w-3.5 h-3.5"/>Freeze</>:<><ShieldCheck className="w-3.5 h-3.5"/>Unfreeze</>}

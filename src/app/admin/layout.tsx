@@ -33,7 +33,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 </span>
               )}
               <div className="w-9 h-9 bg-citi-blue rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">A</span>
+                <span className="text-white text-sm font-bold">
+                  {session.user.firstName?.[0] || 'A'}{session.user.lastName?.[0] || ''}
+                </span>
+              </div>
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-semibold text-citi-gray-800">
+                  {session.user.firstName} {session.user.lastName}
+                </p>
+                <p className="text-xs text-citi-gray-400">{session.user.email}</p>
               </div>
             </div>
           </div>

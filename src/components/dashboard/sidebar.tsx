@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, ArrowLeftRight, CreditCard,
@@ -22,6 +23,7 @@ const nav = [
 ];
 
 export function Sidebar({ unread = 0 }: { unread?: number }) {
+  const { data: session } = useSession();
   const pathname = usePathname();
   const [dark, setDark]           = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -110,6 +112,13 @@ export function Sidebar({ unread = 0 }: { unread?: number }) {
           <HelpCircle className="w-4 h-4" />
           <span>Help & Support</span>
         </Link>
+
+        {session?.user?.role === 'ADMIN' && (
+          <Link href="/admin" className="nav-item">
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Admin Portal</span>
+          </Link>
+        )}
 
         <button
           onClick={() => signOut({ callbackUrl: '/auth/login' })}

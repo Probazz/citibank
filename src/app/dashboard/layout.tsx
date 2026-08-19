@@ -15,9 +15,6 @@ export default async function DashboardLayout({
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect('/auth/login');
 
-  const role = session.user.role || 'USER';
-  if (role === 'ADMIN') redirect('/admin');
-
   const unread = await prisma.notification.count({
     where: { userId: session.user.id, isRead: false },
   });

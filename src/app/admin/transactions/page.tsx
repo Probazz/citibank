@@ -163,7 +163,7 @@ export default function AdminTransactionsPage() {
                       <Edit className="w-3 h-3" /> Edit / Backdate
                     </button>
                     <button
-                      onClick={() => router.push(`/dashboard/receipt?id=${t.id}`)}
+                      onClick={() => router.push(`/admin/receipt?id=${t.id}`)}
                       className="text-xs text-citi-gray-500 font-medium bg-citi-gray-100 px-2.5 py-1 rounded-lg hover:bg-citi-gray-200 transition-all"
                     >
                       Receipt
