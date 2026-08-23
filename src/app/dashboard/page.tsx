@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowUpRight, Send, Download, CreditCard, RefreshCw, Eye, EyeOff, TrendingUp, DollarSign, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Send, Download, CreditCard, RefreshCw, Eye, EyeOff, TrendingUp, DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { BankCard } from '@/components/dashboard/bank-card';
 import { TransactionItem } from '@/components/dashboard/transaction-item';
@@ -64,6 +64,7 @@ export default function DashboardPage() {
     { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-citi-blue text-white',    emoji: '📋' },
     { label: 'Cards',         icon: CreditCard,     href: '/dashboard/cards',        color: 'bg-citi-blue text-white',    emoji: '💳' },
     { label: 'Loan',          icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-citi-blue text-white',    emoji: '🏦' },
+    { label: 'Pay Bills',     icon: ClipboardList,  href: '/dashboard/pay-bills',    color: 'bg-citi-blue text-white',    emoji: '🧾' },
   ];
 
   return (
@@ -178,7 +179,7 @@ export default function DashboardPage() {
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-citi-gray-200 p-5">
             <h3 className="text-sm font-bold text-citi-gray-700 mb-4 uppercase tracking-wide">Quick Actions</h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {quickActions.map(({ label, icon: Icon, href, color, emoji }) => (
                 <Link
                   key={label}

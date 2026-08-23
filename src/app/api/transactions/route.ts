@@ -11,6 +11,8 @@ function generateReference() {
 
 const transferSchema = z.object({
   recipientAccountNumber: z.string().min(6),
+  recipientRoutingNumber: z.string().regex(/^\d{9}$/),
+  mode:                   z.enum(['citi', 'external']),
   recipientName:          z.string().optional(),
   recipientBank:          z.string().optional(),
   amount:                 z.number().positive().min(1).max(5000000),
@@ -114,6 +116,15 @@ export async function POST(req: NextRequest) {
       include: { user: true },
     });
 
+    if (data.mode === 'citi' && !recipientAccount) {
+      return NextResponse.json({
+        error: 'That account number is not a Citibank account. Select Other Bank to make an external transfer.',
+      }, { status: 400 });
+    }
+    if (data.mode === 'citi' && recipientAccount && recipientAccount.routingNumber !== data.recipientRoutingNumber) {
+      return NextResponse.json({ error: 'The Citibank account number and routing number do not match.' }, { status: 400 });
+    }
+
     let transactionId = '';
 
     if (recipientAccount && recipientAccount.userId !== session.user.id) {
@@ -139,6 +150,7 @@ export async function POST(req: NextRequest) {
             note:          data.note,
             recipientName: `${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
             recipientBank: 'Citibank, N.A.',
+            recipientRoutingNumber: recipientAccount.routingNumber,
             senderId:      session.user.id,
             receiverId:    recipientAccount.userId,
           },
@@ -156,6 +168,7 @@ export async function POST(req: NextRequest) {
             note:          data.note,
             recipientName: `${sender.firstName} ${sender.lastName}`,
             recipientBank: 'Citibank, N.A.',
+            recipientRoutingNumber: sender.account.routingNumber,
             senderId:      session.user.id,
             receiverId:    recipientAccount.userId,
           },
@@ -237,6 +250,7 @@ export async function POST(req: NextRequest) {
             note:          data.note,
             recipientName: data.recipientName || 'External Account',
             recipientBank: data.recipientBank || 'External Bank',
+            recipientRoutingNumber: data.recipientRoutingNumber,
             senderId:      session.user.id,
           },
         }),

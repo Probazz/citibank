@@ -21,6 +21,7 @@ export default function TransferPage() {
   const [txId, setTxId]             = useState('');
   const [form, setForm] = useState({
     recipientAccountNumber: '',
+    recipientRoutingNumber: '',
     recipientName: '',
     recipientBank: '',
     amount: '',
@@ -32,6 +33,8 @@ export default function TransferPage() {
 
   function validateForm() {
     if (!form.recipientAccountNumber) return 'Please enter an account number.';
+    if (!/^[0-9]{6,17}$/.test(form.recipientAccountNumber)) return 'Enter a valid account number.';
+    if (!/^[0-9]{9}$/.test(form.recipientRoutingNumber)) return 'Enter a valid 9-digit routing number.';
     if (mode === 'external' && !form.recipientName) return 'Please enter the recipient name.';
     if (mode === 'external' && !form.recipientBank) return 'Please enter the bank name.';
     if (!form.amount || parseFloat(form.amount) <= 0) return 'Please enter a valid amount.';
@@ -73,6 +76,7 @@ export default function TransferPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          mode,
           amount: parseFloat(form.amount),
           pin,
         }),
@@ -149,7 +153,7 @@ export default function TransferPage() {
               variant="ghost"
               onClick={() => {
                 setStep('form');
-                setForm({ recipientAccountNumber:'', recipientName:'', recipientBank:'', amount:'', description:'', note:'' });
+                setForm({ recipientAccountNumber:'', recipientRoutingNumber:'', recipientName:'', recipientBank:'', amount:'', description:'', note:'' });
                 setPin('');
                 setError('');
               }}
@@ -239,6 +243,16 @@ export default function TransferPage() {
               </>
             )}
 
+            <Input
+              label="Routing Number *"
+              placeholder="9-digit routing number"
+              inputMode="numeric"
+              maxLength={9}
+              value={form.recipientRoutingNumber}
+              onChange={e => update('recipientRoutingNumber', e.target.value.replace(/\D/g, '').slice(0, 9))}
+              hint={mode === 'citi' ? 'Use the routing number for the Citi account.' : 'Use the routing number provided by the other bank.'}
+            />
+
             <div>
               <label className="citi-label">Amount (USD) *</label>
               <div className="relative">
@@ -289,6 +303,7 @@ export default function TransferPage() {
             </p>
 
             {/* PIN dots display */}
+                ['Routing Number', form.recipientRoutingNumber],
             <div className="flex justify-center gap-3 mb-8">
               {[0, 1, 2, 3].map(i => (
                 <div

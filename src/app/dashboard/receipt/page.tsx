@@ -170,6 +170,7 @@ export default function ReceiptPage() {
     ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
     ...(transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
     ...(transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
+    ...(transaction.recipientRoutingNumber ? [['Routing Number', transaction.recipientRoutingNumber]] : []),
     ...(transaction.note          ? [['Note',           transaction.note]]          : []),
     ['Date & Time',      formatDateTime(transaction.createdAt)],
     ...(transaction.sender   ? [['Sent By',     `${transaction.sender.firstName} ${transaction.sender.lastName}`]]   : []),

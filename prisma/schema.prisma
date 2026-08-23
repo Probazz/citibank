@@ -118,6 +118,7 @@ model Transaction {
   category      String?
   recipientBank String?
   recipientName String?
+  recipientRoutingNumber String?
   senderId      String?
   sender        User?             @relation("SentTransactions", fields: [senderId], references: [id])
   receiverId    String?
