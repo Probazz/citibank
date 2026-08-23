@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'No PIN set. Please set a transaction PIN first.', noPIN: true }, { status: 400 });
 
   const valid = await bcrypt.compare(pin, user.transactionPin);
-  if (!valid) return NextResponse.json({ error: 'Incorrect PIN.' }, { status: 400 });
+  if (!valid) return NextResponse.json({ error: 'You entered an incorrect transaction PIN. Please try again.' }, { status: 400 });
 
   return NextResponse.json({ valid: true });
 }

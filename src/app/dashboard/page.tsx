@@ -60,10 +60,10 @@ export default function DashboardPage() {
 
   const quickActions = [
     { label: 'Send Money',   icon: Send,          href: '/dashboard/transfer',     color: 'bg-citi-blue text-white',    emoji: '💸' },
-    { label: 'Withdraw',     icon: Download,       href: '/dashboard/withdraw',     color: 'bg-citi-green text-white',   emoji: '🏧' },
-    { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-purple-600 text-white',   emoji: '📋' },
-    { label: 'Cards',        icon: CreditCard,     href: '/dashboard/cards',        color: 'bg-orange-500 text-white',   emoji: '💳' },
-    { label: 'Loan',         icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-yellow-500 text-white',   emoji: '🏦' },
+    { label: 'Withdraw',     icon: Download,       href: '/dashboard/withdraw',     color: 'bg-citi-blue text-white',    emoji: '🏧' },
+    { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-citi-blue text-white',    emoji: '📋' },
+    { label: 'Cards',         icon: CreditCard,     href: '/dashboard/cards',        color: 'bg-citi-blue text-white',    emoji: '💳' },
+    { label: 'Loan',          icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-citi-blue text-white',    emoji: '🏦' },
   ];
 
   return (
@@ -107,7 +107,7 @@ export default function DashboardPage() {
                     {hideBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-3xl font-black">
+                <p className="text-3xl font-semibold tracking-tight tabular-nums">
                   {hideBalance ? '$ ••••••' : formatCurrency(account?.balance ?? 0)}
                 </p>
                 <p className="text-blue-200 text-xs mt-1">Available Balance</p>
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 {/*<p className="text-white/70 font-mono text-xs mb-4 tracking-widest">
                   {account?.accountNumber ? account.accountNumber.slice(0, 8) + 'XX' : '—'}
                 </p>*/}
-                <p className="text-3xl font-black mt-2">
+                <p className="text-3xl font-semibold tracking-tight tabular-nums mt-2">
                   {hideBalance ? '$ ••••••' : formatCurrency(account?.savingsBalance ?? 0)}
                 </p>
                 <p className="text-slate-400 text-xs mt-1">Available Balance</p>

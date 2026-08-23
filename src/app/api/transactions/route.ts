@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     // ── Verify PIN ────────────────────────────────────────────
     const pinValid = await bcrypt.compare(data.pin, sender.transactionPin);
     if (!pinValid) {
-      return NextResponse.json({ error: 'Incorrect transaction PIN. Please try again.' }, { status: 400 });
+      return NextResponse.json({ error: 'You entered an incorrect transaction PIN. Please try again.' }, { status: 400 });
     }
 
     // ── Check balance ─────────────────────────────────────────

@@ -160,7 +160,7 @@ export default function AdminTransactionsPage() {
                       onClick={() => openEdit(t)}
                       className="flex items-center gap-1 text-xs text-citi-blue font-medium bg-citi-blue-50 px-2.5 py-1 rounded-lg hover:bg-citi-blue hover:text-white transition-all"
                     >
-                      <Edit className="w-3 h-3" /> Edit / Backdate
+                      <Edit className="w-3 h-3" /> Edit transaction
                     </button>
                     <button
                       onClick={() => router.push(`/admin/receipt?id=${t.id}`)}
@@ -205,11 +205,11 @@ export default function AdminTransactionsPage() {
         )}
       </div>
 
-      {/* Edit / Backdate Modal */}
+      {/* Edit transaction modal */}
       <Modal
         isOpen={!!editTx}
         onClose={() => setEditTx(null)}
-        title="Edit Transaction / Backdate"
+        title="Edit Transaction"
         size="md"
       >
         {editTx && (
@@ -224,9 +224,9 @@ export default function AdminTransactionsPage() {
               <p className="text-sm font-bold text-citi-gray-800">{formatDateTime(editTx.createdAt)}</p>
             </div>
 
-            {/* Edit date (backdating) */}
+            {/* Transaction date */}
             <div>
-              <label className="citi-label">New Transaction Date & Time (Backdating)</label>
+              <label className="citi-label">Transaction Date & Time</label>
               <input
                 type="datetime-local"
                 value={editDate}
@@ -234,7 +234,7 @@ export default function AdminTransactionsPage() {
                 className="citi-input"
               />
               <p className="text-xs text-citi-gray-400 mt-1">
-                Change this to backdate the transaction to a different date
+                Set the date and time that should appear for this transaction
               </p>
             </div>
 
