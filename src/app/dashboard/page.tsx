@@ -59,9 +59,10 @@ export default function DashboardPage() {
   const isSuspended = account?.status === 'SUSPENDED';
 
   const quickActions = [
-    { label: 'Send Money',   icon: Send,          href: '/dashboard/transfer',     color: 'bg-citi-blue text-white',    emoji: '💸' },
+    { label: 'Transfer',   icon: Send,          href: '/dashboard/transfer',     color: 'bg-citi-blue text-white',    emoji: '💸' },
     { label: 'Withdraw',     icon: Download,       href: '/dashboard/withdraw',     color: 'bg-citi-blue text-white',    emoji: '🏧' },
     { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-citi-blue text-white',    emoji: '📋' },
+    { label: 'Cards', icon: CreditCard,   href: '/dashboard/cards', color: 'bg-citi-blue text-white',    emoji: '📋' },
     { label: 'Loan',          icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-citi-blue text-white',    emoji: '🏦' },
     { label: 'Pay Bills',     icon: ClipboardList,  href: '/dashboard/pay-bills',    color: 'bg-citi-blue text-white',    emoji: '🧾' },
   ];
