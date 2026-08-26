@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 const nav = [
   { href: '/dashboard',               label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/dashboard/transactions',  label: 'History',       icon: ArrowLeftRight },
-  { href: '/dashboard/transfer',      label: 'Send Money',    icon: Send },
+  { href: '/dashboard/transfer',      label: 'Transfer',    icon: Send },
   { href: '/dashboard/withdraw',      label: 'Withdraw',      icon: Download },
   { href: '/dashboard/loan',          label: 'Loans',         icon: DollarSign },
   { href: '/dashboard/cards',         label: 'Cards',         icon: CreditCard },

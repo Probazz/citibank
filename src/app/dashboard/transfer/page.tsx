@@ -184,7 +184,7 @@ export default function TransferPage() {
             <ArrowLeft className="w-5 h-5 text-citi-gray-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-citi-gray-800">Send Money</h1>
+            <h1 className="text-2xl font-black text-citi-gray-800">Transfer</h1>
             <p className="text-citi-gray-500 text-sm">Secure bank transfer</p>
           </div>
         </div>
