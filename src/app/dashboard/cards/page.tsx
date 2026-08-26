@@ -34,7 +34,7 @@ export default function CardsPage() {
   const card = data.account.cards[0];
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
+    <div className="max-w-2xl mx-auto -mt-[40px] sm:-mt-28 lg:-mt-28 animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/dashboard" className="p-2 rounded-lg hover:bg-citi-gray-100 transition-colors">
           <ArrowLeft className="w-5 h-5 text-citi-gray-600" />

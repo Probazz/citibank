@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, AlertCircle, CheckCircle, ArrowLeft, Lock, Building, Download } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ export default function TransferPage() {
   const [pin, setPin]         = useState('');
   const [reference, setReference]   = useState('');
   const [txId, setTxId]             = useState('');
+  const errorRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState({
     recipientAccountNumber: '',
     recipientRoutingNumber: '',
@@ -30,6 +31,12 @@ export default function TransferPage() {
   });
 
   const update = (f: string, v: string) => setForm(p => ({ ...p, [f]: v }));
+
+  useEffect(() => {
+    if (step === 'pin' && error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [error, step]);
 
   function validateForm() {
     if (!form.recipientAccountNumber) return 'Please enter an account number.';
@@ -100,7 +107,7 @@ export default function TransferPage() {
 
   // ── SUCCESS SCREEN ────────────────────────────────────────────
   if (step === 'success') return (
-    <div className="max-w-md mx-auto animate-fade-in">
+    <div className="max-w-md mx-auto -mt-[70px] sm:-mt-[102px] lg:-mt-[102px] animate-fade-in">
       <div className="bg-white rounded-2xl border border-citi-gray-200 overflow-hidden">
 
         {/* Success header */}
@@ -117,7 +124,7 @@ export default function TransferPage() {
           <div className="space-y-0 divide-y divide-citi-gray-100 mb-6">
             {[
               ['Amount Sent',    formatCurrency(parseFloat(form.amount))],
-              ['To Account',     `••••${form.recipientAccountNumber.slice(-4)}`],
+              ['To Account',     form.recipientAccountNumber],
               ...(form.recipientName ? [['Recipient', form.recipientName]] : []),
               ...(form.recipientBank ? [['Bank', form.recipientBank]] : []),
               ['Description',    form.description],
@@ -170,19 +177,21 @@ export default function TransferPage() {
   );
 
   return (
-    <div className="max-w-lg mx-auto animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/dashboard" className="p-2 rounded-lg hover:bg-citi-gray-100 transition-colors">
-          <ArrowLeft className="w-5 h-5 text-citi-gray-600" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black text-citi-gray-800">Send Money</h1>
-          <p className="text-citi-gray-500 text-sm">Secure bank transfer</p>
+    <div className="max-w-lg mx-auto -mt-[40px] sm:-mt-[102px] lg:-mt-[102px] animate-fade-in">
+      {step !== 'pin' && (
+        <div className="flex items-center gap-3 mb-6">
+          <Link href="/dashboard" className="p-2 rounded-lg hover:bg-citi-gray-100 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-citi-gray-600" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black text-citi-gray-800">Send Money</h1>
+            <p className="text-citi-gray-500 text-sm">Secure bank transfer</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
-        <div className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-5">
+        <div ref={errorRef} role="alert" className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-5">
           <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
           <p className="text-sm text-citi-red font-medium">{error}</p>
         </div>
@@ -303,7 +312,6 @@ export default function TransferPage() {
             </p>
 
             {/* PIN dots display */}
-                ['Routing Number', form.recipientRoutingNumber],
             <div className="flex justify-center gap-3 mb-8">
               {[0, 1, 2, 3].map(i => (
                 <div
@@ -366,7 +374,7 @@ export default function TransferPage() {
 
             <div className="bg-citi-gray-50 rounded-xl overflow-hidden mb-6">
               {[
-                ['To Account',  `••••${form.recipientAccountNumber.slice(-4)}`],
+                ['To Account',  `${form.recipientAccountNumber.slice(-10)}`],
                 ...(form.recipientName ? [['Recipient',  form.recipientName]] : []),
                 ...(form.recipientBank ? [['Bank',       form.recipientBank]] : []),
                 ['Amount',      formatCurrency(parseFloat(form.amount))],

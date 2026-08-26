@@ -24,10 +24,10 @@ export default async function DashboardLayout({
       <Sidebar unread={unread} />
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <Topbar unread={unread} />
-        <main className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full">
+        <main className="flex-1 min-w-0 px-3 pb-3 pt-20 sm:px-4 sm:pb-4 sm:pt-28 lg:px-6 lg:pb-6 lg:pt-28 max-w-7xl mx-auto w-full">
           {children}
         </main>
-        <footer className="py-4 px-6 border-t border-citi-gray-200 bg-white">
+        <footer className="py-4 px-3 sm:px-6 border-t border-citi-gray-200 bg-white">
           <p className="text-xs text-citi-gray-400 text-center">
             © {new Date().getFullYear()} Citibank, N.A. Member FDIC. Equal Housing Lender. All rights reserved.
           </p>

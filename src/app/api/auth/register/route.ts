@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
     const accountNumber  = generateAccountNumber();
+    const savingsAccountNumber = generateAccountNumber();
     const cardNumber     = generateCardNumber();
 
     const user = await prisma.user.create({
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
         account: {
           create: {
             accountNumber,
+            savingsAccountNumber,
             balance: 0,
             savingsBalance: 0,
             cards: {

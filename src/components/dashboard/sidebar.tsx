@@ -25,6 +25,13 @@ const nav = [
 export function Sidebar({ unread = 0 }: { unread?: number }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const noMobileMenuRoutes = [
+    '/dashboard/transfer',
+    '/dashboard/notifications',
+    '/dashboard/withdraw',
+    '/dashboard/cards',
+  ];
+  const isNoMobileMenuPage = noMobileMenuRoutes.includes(pathname);
   const [dark, setDark]           = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -138,29 +145,33 @@ export function Sidebar({ unread = 0 }: { unread?: number }) {
         <SidebarContent />
       </aside>
 
-      {/* Mobile hamburger button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-white rounded-xl shadow-card border border-citi-gray-200"
-      >
-        <Menu className="w-5 h-5 text-citi-gray-700" />
-      </button>
+      {!isNoMobileMenuPage && (
+        <>
+          {/* Mobile hamburger button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-white rounded-xl shadow-card border border-citi-gray-200"
+          >
+            <Menu className="w-5 h-5 text-citi-gray-700" />
+          </button>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
+          {/* Mobile overlay */}
+          {mobileOpen && (
+            <div
+              className="lg:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
+          )}
+
+          {/* Mobile drawer */}
+          <aside className={cn(
+            'lg:hidden fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-modal transition-transform duration-300 flex flex-col',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          )}>
+            <SidebarContent />
+          </aside>
+        </>
       )}
-
-      {/* Mobile drawer */}
-      <aside className={cn(
-        'lg:hidden fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-modal transition-transform duration-300 flex flex-col',
-        mobileOpen ? 'translate-x-0' : '-translate-x-full'
-      )}>
-        <SidebarContent />
-      </aside>
     </>
   );
 }

@@ -62,7 +62,6 @@ export default function DashboardPage() {
     { label: 'Send Money',   icon: Send,          href: '/dashboard/transfer',     color: 'bg-citi-blue text-white',    emoji: '💸' },
     { label: 'Withdraw',     icon: Download,       href: '/dashboard/withdraw',     color: 'bg-citi-blue text-white',    emoji: '🏧' },
     { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-citi-blue text-white',    emoji: '📋' },
-    { label: 'Cards',         icon: CreditCard,     href: '/dashboard/cards',        color: 'bg-citi-blue text-white',    emoji: '💳' },
     { label: 'Loan',          icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-citi-blue text-white',    emoji: '🏦' },
     { label: 'Pay Bills',     icon: ClipboardList,  href: '/dashboard/pay-bills',    color: 'bg-citi-blue text-white',    emoji: '🧾' },
   ];
@@ -108,7 +107,7 @@ export default function DashboardPage() {
                     {hideBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-3xl font-semibold tracking-tight tabular-nums">
+                <p className="balance-amount text-3xl font-semibold tracking-tight tabular-nums">
                   {hideBalance ? '$ ••••••' : formatCurrency(account?.balance ?? 0)}
                 </p>
                 <p className="text-blue-200 text-xs mt-1">Available Balance</p>
@@ -127,7 +126,7 @@ export default function DashboardPage() {
                 {/*<p className="text-white/70 font-mono text-xs mb-4 tracking-widest">
                   {account?.accountNumber ? account.accountNumber.slice(0, 8) + 'XX' : '—'}
                 </p>*/}
-                <p className="text-3xl font-semibold tracking-tight tabular-nums mt-2">
+                <p className="balance-amount text-3xl font-semibold tracking-tight tabular-nums mt-2">
                   {hideBalance ? '$ ••••••' : formatCurrency(account?.savingsBalance ?? 0)}
                 </p>
                 <p className="text-slate-400 text-xs mt-1">Available Balance</p>
@@ -139,13 +138,19 @@ export default function DashboardPage() {
           </div>
 
           {/* Account details */}
-          <div className="bg-white rounded-2xl border border-citi-gray-200 p-5">
+          <div className="bg-white rounded-2xl border border-citi-gray-200 p-3 sm:p-5 min-w-0">
             <h3 className="text-sm font-bold text-citi-gray-700 mb-4 uppercase tracking-wide">Account Details</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-citi-gray-400 font-medium">Account Number</p>
-                <p className="text-sm font-bold text-citi-gray-800 mt-0.5 font-sans tracking-wider">
+                <p className="text-sm font-bold text-citi-gray-800 mt-0.5 font-sans tracking-wider break-all">
                   {account?.accountNumber || '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-citi-gray-400 font-medium">Savings Account Number</p>
+                <p className="text-sm font-bold text-citi-gray-800 mt-0.5 font-sans tracking-wider break-all">
+                  {account?.savingsAccountNumber || '—'}
                 </p>
               </div>
               <div>

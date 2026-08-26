@@ -9,6 +9,7 @@ export interface UserWithAccount {
   account?: {
     id: string;
     accountNumber: string;
+    savingsAccountNumber?: string | null;
     routingNumber: string;
     balance: number;
     savingsBalance: number;

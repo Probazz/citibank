@@ -77,6 +77,7 @@ model User {
 model Account {
   id             String        @id @default(cuid())
   accountNumber  String        @unique
+  savingsAccountNumber String? @unique
   routingNumber  String        @default("021000089")
   swiftCode      String        @default("CITIUS33")
   balance        Float         @default(0)

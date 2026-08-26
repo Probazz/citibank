@@ -2,11 +2,13 @@
 import { useSession } from 'next-auth/react';
 import { Bell, Headset, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface TopbarProps { unread?: number; }
 
 export function Topbar({ unread = 0 }: TopbarProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const firstName = session?.user?.firstName || 'there';
 
   function getGreeting() {
@@ -17,12 +19,12 @@ export function Topbar({ unread = 0 }: TopbarProps) {
   }
 
   return (
-    <header className="bg-white border-b border-citi-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 lg:pl-6 pl-16">
-      <div>
-        <h1 className="text-lg font-bold text-citi-gray-800">
+    <header className={`${pathname === '/dashboard' ? 'flex' : 'hidden'} lg:flex fixed top-0 left-0 lg:left-64 right-0 z-30 min-h-[72px] bg-white border-b border-citi-gray-200 px-3 sm:px-6 py-3 sm:py-4 items-center justify-between gap-2 pl-14 sm:pl-16 lg:pl-6`}>
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-xs sm:text-lg ml-2 font-bold text-citi-gray-800">
           {getGreeting()}, {firstName}!
         </h1>
-        <p className="text-xs text-citi-gray-500">
+        <p className="truncate text-[10px] sm:text-xs ml-2 text-citi-gray-500">
           {new Date().toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -31,18 +33,18 @@ export function Topbar({ unread = 0 }: TopbarProps) {
         </p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-shrink-0 items-center gap-1 sm:gap-3">
         <Link
           href="/dashboard/support"
           title="Contact support"
-          className="relative p-2 rounded-xl hover:bg-citi-gray-100 transition-colors"
+          className="relative p-1.5 sm:p-2 rounded-xl hover:bg-citi-gray-100 transition-colors"
         >
           <Headset className="w-5 h-5 text-citi-gray-600" />
           
         </Link>
         <Link
           href="/dashboard/notifications"
-          className="relative p-2 rounded-xl hover:bg-citi-gray-100 transition-colors"
+          className="relative p-1.5 sm:p-2 rounded-xl hover:bg-citi-gray-100 transition-colors"
         >
           <Bell className="w-5 h-5 text-citi-gray-600" />
           {unread > 0 && (
@@ -53,8 +55,8 @@ export function Topbar({ unread = 0 }: TopbarProps) {
         </Link>
         
 
-        <div className="flex items-center gap-2 pl-3 border-l border-citi-gray-200">
-          <div className="w-9 h-9 bg-citi-blue rounded-full flex items-center justify-center">
+        <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-3 border-l border-citi-gray-200">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-bold">
               {session?.user?.firstName?.[0]}{session?.user?.lastName?.[0]}
             </span>

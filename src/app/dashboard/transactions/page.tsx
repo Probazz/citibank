@@ -57,18 +57,18 @@ export default function TransactionsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-citi-gray-200 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl border border-citi-gray-200 p-3 sm:p-4 min-w-0">
           <p className="text-xs text-citi-gray-500 font-medium">Total Transactions</p>
           <p className="text-xl font-bold text-citi-gray-800 mt-1">{total}</p>
         </div>
-        <div className="bg-white rounded-xl border border-citi-gray-200 p-4">
+        <div className="bg-white rounded-xl border border-citi-gray-200 p-3 sm:p-4 min-w-0">
           <p className="text-xs text-citi-gray-500 font-medium">Total Credited</p>
-          <p className="text-xl font-bold text-citi-green mt-1">{formatCurrency(totalCredits)}</p>
+          <p className="text-lg sm:text-xl font-bold text-citi-green mt-1 break-all tabular-nums">{formatCurrency(totalCredits)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-citi-gray-200 p-4">
+        <div className="bg-white rounded-xl border border-citi-gray-200 p-3 sm:p-4 min-w-0">
           <p className="text-xs text-citi-gray-500 font-medium">Total Debited</p>
-          <p className="text-xl font-bold text-citi-red mt-1">{formatCurrency(totalDebits)}</p>
+          <p className="text-lg sm:text-xl font-bold text-citi-red mt-1 break-all tabular-nums">{formatCurrency(totalDebits)}</p>
         </div>
       </div>
 

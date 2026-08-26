@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, CheckCheck, Info, CheckCircle, AlertCircle, XCircle, ChevronRight } from 'lucide-react';
+import { Bell, CheckCheck, Info, CheckCircle, AlertCircle, XCircle, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const typeIcons: Record<string, React.ReactNode> = {
   success: <CheckCircle  className="w-5 h-5 text-citi-green" />,
@@ -73,13 +74,18 @@ export default function NotificationsPage() {
   const unread = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black text-citi-gray-800">Notifications</h1>
-          <p className="text-citi-gray-500 text-sm mt-1">
-            {unread > 0 ? `${unread} unread` : 'All caught up!'}
-          </p>
+    <div className="max-w-2xl mx-auto -mt-[40px] sm:-mt-28 lg:-mt-28 animate-fade-in">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-1 min-w-0">
+          <Link href="/dashboard" className="p-2 rounded-lg hover:bg-citi-gray-100 transition-colors flex-shrink-0">
+            <ArrowLeft className="w-5 h-5 text-citi-gray-600" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black text-citi-gray-800 truncate">Notifications</h1>
+            <p className="text-citi-gray-500 text-sm mt-1">
+              {unread > 0 ? `${unread} unread` : 'All caught up!'}
+            </p>
+          </div>
         </div>
         {unread > 0 && (
           <Button variant="secondary" size="sm" onClick={markAllRead}>

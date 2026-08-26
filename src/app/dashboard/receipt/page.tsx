@@ -44,6 +44,8 @@ export default function ReceiptPage() {
     if (!printWindow || !transaction) return;
 
     const isCredit = ['CREDIT','TRANSFER_IN','ADMIN_CREDIT','DEPOSIT'].includes(transaction.type);
+    const isTransferIn = transaction.type === 'TRANSFER_IN';
+    const isTransferOut = transaction.type === 'TRANSFER_OUT';
     const sign     = isCredit ? '+' : '-';
     const color    = isCredit ? '#1A8C4E' : '#D22630';
 
@@ -54,12 +56,12 @@ export default function ReceiptPage() {
       ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
       ['Description',      transaction.description],
       ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
-      ...(transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
-      ...(transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
+      ...(!isTransferIn && transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
+      ...(!isTransferIn && transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
       ...(transaction.note          ? [['Note',           transaction.note]]          : []),
       ['Date & Time',      formatDateTime(transaction.createdAt)],
-      ...(transaction.sender   ? [['Sent By',     `${transaction.sender.firstName} ${transaction.sender.lastName}`]]   : []),
-      ...(transaction.receiver ? [['Received By', `${transaction.receiver.firstName} ${transaction.receiver.lastName}`]] : []),
+      ...(!isTransferOut && transaction.sender ? [['Sent By', `${transaction.sender.firstName} ${transaction.sender.lastName}`]] : []),
+      ...(!isTransferOut && !isTransferIn && transaction.receiver ? [['Received By', `${transaction.receiver.firstName} ${transaction.receiver.lastName}`]] : []),
     ];
 
     printWindow.document.write(`
@@ -158,6 +160,8 @@ export default function ReceiptPage() {
   );
 
   const isCredit = ['CREDIT','TRANSFER_IN','ADMIN_CREDIT','DEPOSIT'].includes(transaction.type);
+  const isTransferIn = transaction.type === 'TRANSFER_IN';
+  const isTransferOut = transaction.type === 'TRANSFER_OUT';
   const sign     = isCredit ? '+' : '-';
   const amtColor = isCredit ? 'text-citi-green' : 'text-citi-red';
 
@@ -168,37 +172,30 @@ export default function ReceiptPage() {
     ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
     ['Description',      transaction.description],
     ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
-    ...(transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
-    ...(transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
+    ...(!isTransferIn && transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
+    ...(!isTransferIn && transaction.recipientBank ? [['Recipient Bank', transaction.recipientBank]] : []),
     ...(transaction.recipientRoutingNumber ? [['Routing Number', transaction.recipientRoutingNumber]] : []),
     ...(transaction.note          ? [['Note',           transaction.note]]          : []),
     ['Date & Time',      formatDateTime(transaction.createdAt)],
-    ...(transaction.sender   ? [['Sent By',     `${transaction.sender.firstName} ${transaction.sender.lastName}`]]   : []),
-    ...(transaction.receiver ? [['Received By', `${transaction.receiver.firstName} ${transaction.receiver.lastName}`]] : []),
+    ...(!isTransferOut && transaction.sender ? [['Sent By', `${transaction.sender.firstName} ${transaction.sender.lastName}`]] : []),
+    ...(!isTransferOut && !isTransferIn && transaction.receiver ? [['Received By', `${transaction.receiver.firstName} ${transaction.receiver.lastName}`]] : []),
   ];
 
   return (
-    <div className="max-w-md mx-auto animate-fade-in pb-10">
+    <div className="w-full max-w-md mx-auto -mt-14 sm:mt-0 animate-fade-in pb-4 sm:pb-10">
 
       {/* Top actions */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-1 mb-1 sm:gap-2 sm:mb-6">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-citi-gray-500 hover:text-citi-gray-800 transition-colors"
+          className="flex items-center gap-1.5 text-xs sm:text-sm text-citi-gray-500 hover:text-citi-gray-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <div className="flex gap-2">
           <button
-            onClick={copyReference}
-            className="flex items-center gap-1.5 px-3 py-2 border border-citi-gray-300 rounded-lg text-sm font-medium text-citi-gray-600 hover:bg-citi-gray-50 transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-citi-green" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-          <button
             onClick={shareReceipt}
-            className="flex items-center gap-1.5 px-3 py-2 border border-citi-gray-300 rounded-lg text-sm font-medium text-citi-gray-600 hover:bg-citi-gray-50 transition-colors"
+            className="flex items-center gap-1 px-1.5 py-1 sm:gap-1.5 sm:px-3 sm:py-2 border border-citi-gray-300 rounded-lg text-[11px] sm:text-sm font-medium text-citi-gray-600 hover:bg-citi-gray-50 transition-colors"
           >
             <Share2 className="w-4 h-4" /> Share
           </button>
@@ -209,32 +206,32 @@ export default function ReceiptPage() {
       <div ref={receiptRef} className="bg-white rounded-2xl border border-citi-gray-200 overflow-hidden shadow-card">
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-citi-blue to-citi-blue-light p-8 text-center text-white">
-          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <CheckCircle className="w-7 h-7 text-white" />
+        <div className="bg-gradient-to-br from-citi-blue to-citi-blue-light p-3 sm:p-8 text-center text-white">
+          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-1.5 sm:mb-3">
+            <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
           </div>
-          <p className="text-blue-200 text-xs font-medium uppercase tracking-wide mb-2">
+          <p className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wide mb-1 sm:mb-2">
             Transaction {isCredit ? 'Received' : 'Sent'}
           </p>
-          <p className={`text-4xl font-black ${isCredit ? 'text-green-300' : 'text-white'}`}>
+          <p className={`text-2xl sm:text-4xl font-black break-all ${isCredit ? 'text-green-300' : 'text-white'}`}>
             {sign}{formatCurrency(transaction.amount)}
           </p>
-          <p className="text-blue-200 text-sm mt-2">{formatDateTime(transaction.createdAt)}</p>
+          <p className="text-blue-200 text-xs sm:text-sm mt-1 sm:mt-2">{formatDateTime(transaction.createdAt)}</p>
         </div>
 
         {/* Status bar */}
-        <div className="bg-citi-red flex items-center justify-center gap-2 py-2.5">
-          <CheckCircle className="w-4 h-4 text-white" />
-          <span className="text-white text-sm font-bold">Transaction Successful</span>
+        <div className="bg-citi-red flex items-center justify-center gap-1.5 py-1.5 sm:gap-2 sm:py-2.5">
+          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+          <span className="text-white text-xs sm:text-sm font-bold">Transaction Successful</span>
         </div>
 
         {/* Details */}
-        <div className="p-6">
+        <div className="p-6 sm:p-6">
           <div className="divide-y divide-citi-gray-100">
             {rows.map(([label, value]) => (
-              <div key={label} className="flex justify-between items-start py-3.5 gap-4">
-                <span className="text-sm text-citi-gray-400 font-medium flex-shrink-0">{label}</span>
-                <span className={`text-sm font-semibold text-right break-all ${
+              <div key={label} className="flex justify-between items-start py-1 sm:py-3.5 gap-2 sm:gap-3">
+                <span className="text-[11px] sm:text-sm text-citi-gray-400 font-medium flex-shrink-0">{label}</span>
+                <span className={`text-[11px] sm:text-sm font-semibold text-right break-all min-w-0 ${
                   label === 'Amount' ? amtColor :
                   label === 'Status' ? 'text-citi-green' :
                   label === 'Reference Number' ? 'font-mono text-citi-blue text-xs' :
@@ -248,19 +245,19 @@ export default function ReceiptPage() {
         </div>
 
         {/* Footer */}
-        <div className="bg-citi-gray-50 px-6 py-4 border-t border-citi-gray-200">
-          <div className="flex items-center justify-center gap-3 mb-3">
+        <div className="bg-citi-gray-50 px-2 sm:px-6 py-1.5 sm:py-4 border-t border-citi-gray-200">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1 sm:mb-3">
             <div className="flex items-center mb-0 mt-0">
             <img
               src="/citibank-logo3.png"
               alt="Citibank"
-              className="w-30 h-10"
+              className="w-20 h-7 sm:w-30 sm:h-10"
             />
           </div>
             <span className="text-xs font-bold text-citi-gray-600">Citibank, N.A.</span>
           </div>
-          <p className="text-xs text-citi-gray-400 text-center">Member FDIC • Equal Housing Lender</p>
-          <p className="text-xs text-citi-gray-400 text-center mt-1">Keep this receipt for your records</p>
+          <p className="text-[10px] sm:text-xs text-citi-gray-400 text-center">Member FDIC • Equal Housing Lender</p>
+          <p className="text-[10px] sm:text-xs text-citi-gray-400 text-center mt-0.5 sm:mt-1">Keep this receipt for your records</p>
         </div>
       </div>
 

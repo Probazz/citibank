@@ -25,12 +25,14 @@ export async function GET(req: NextRequest) {
     let account = user.account;
     if (!account) {
       const generatedAccountNumber = generateAccountNumber();
+      const generatedSavingsAccountNumber = generateAccountNumber();
       const generatedCardNumber = generateCardNumber();
 
       account = await prisma.account.create({
         data: {
           userId: user.id,
           accountNumber: generatedAccountNumber,
+          savingsAccountNumber: generatedSavingsAccountNumber,
           balance: 0,
           savingsBalance: 0,
           status: 'ACTIVE',
@@ -56,6 +58,14 @@ export async function GET(req: NextRequest) {
           type: 'success',
           userId: user.id,
         },
+      });
+    }
+
+    if (!account.savingsAccountNumber) {
+      account = await prisma.account.update({
+        where: { id: account.id },
+        data: { savingsAccountNumber: generateAccountNumber() },
+        include: { cards: true },
       });
     }
 
@@ -93,6 +103,7 @@ export async function GET(req: NextRequest) {
       account: {
         id: account.id,
         accountNumber: account.accountNumber,
+        savingsAccountNumber: account.savingsAccountNumber,
         routingNumber: account.routingNumber,
         balance: account.balance,
         savingsBalance: account.savingsBalance,
