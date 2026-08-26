@@ -10,9 +10,9 @@ import { PageLoading } from '@/components/ui/index';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [data, setData]             = useState<any>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string>('');
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [hideBalance, setHideBalance] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -55,16 +55,16 @@ export default function DashboardPage() {
   );
 
   const { account, recentTransactions, user } = data;
-  const isFrozen    = account?.status === 'FROZEN';
+  const isFrozen = account?.status === 'FROZEN';
   const isSuspended = account?.status === 'SUSPENDED';
 
   const quickActions = [
-    { label: 'Transfer',   icon: Send,          href: '/dashboard/transfer',     color: 'bg-citi-blue text-white',    emoji: '💸' },
-    { label: 'Withdraw',     icon: Download,       href: '/dashboard/withdraw',     color: 'bg-citi-blue text-white',    emoji: '🏧' },
-    { label: 'Transactions', icon: ArrowUpRight,   href: '/dashboard/transactions', color: 'bg-citi-blue text-white',    emoji: '📋' },
-    { label: 'Cards', icon: CreditCard,   href: '/dashboard/cards', color: 'bg-citi-blue text-white',    emoji: '📋' },
-    { label: 'Loan',          icon: DollarSign,     href: '/dashboard/loan',         color: 'bg-citi-blue text-white',    emoji: '🏦' },
-    { label: 'Pay Bills',     icon: ClipboardList,  href: '/dashboard/pay-bills',    color: 'bg-citi-blue text-white',    emoji: '🧾' },
+    { label: 'Transfer', icon: Send, href: '/dashboard/transfer', color: 'bg-citi-blue text-white', emoji: '💸' },
+    { label: 'Withdraw', icon: Download, href: '/dashboard/withdraw', color: 'bg-citi-blue text-white', emoji: '🏧' },
+    { label: 'Transactions', icon: ArrowUpRight, href: '/dashboard/transactions', color: 'bg-citi-blue text-white', emoji: '📋' },
+    { label: 'Cards', icon: CreditCard, href: '/dashboard/cards', color: 'bg-citi-blue text-white', emoji: '📋' },
+    { label: 'Loan', icon: DollarSign, href: '/dashboard/loan', color: 'bg-citi-blue text-white', emoji: '🏦' },
+    { label: 'Pay Bills', icon: ClipboardList, href: '/dashboard/pay-bills', color: 'bg-citi-blue text-white', emoji: '🧾' },
   ];
 
   return (
@@ -168,17 +168,16 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-citi-gray-400 font-medium">Account Status</p>
-                <p className={`text-sm font-bold mt-0.5 ${
-                  account?.status === 'ACTIVE'    ? 'text-citi-green' :
-                  account?.status === 'FROZEN'    ? 'text-yellow-600' : 'text-citi-red'
-                }`}>
+                <p className={`text-sm font-bold mt-0.5 ${account?.status === 'ACTIVE' ? 'text-citi-green' :
+                    account?.status === 'FROZEN' ? 'text-yellow-600' : 'text-citi-red'
+                  }`}>
                   {account?.status ?? '—'}
                 </p>
               </div>
-              <div>
+              {/* <div>
                 <p className="text-xs text-citi-gray-400 font-medium">Account Holder</p>
                 <p className="text-sm font-bold text-citi-gray-800 mt-0.5">{user?.firstName} {user?.lastName}</p>
-              </div>
+              </div>*/}
             </div>
           </div>
 
@@ -190,9 +189,8 @@ export default function DashboardPage() {
                 <Link
                   key={label}
                   href={isSuspended ? '#' : href}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors group ${
-                    isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-citi-gray-50'
-                  }`}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors group ${isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-citi-gray-50'
+                    }`}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color} group-hover:scale-105 transition-transform shadow-sm`}>
                     <Icon className="w-5 h-5" />
