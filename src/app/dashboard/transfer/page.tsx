@@ -59,20 +59,26 @@ export default function TransferPage() {
 
   async function verifyPin() {
     if (pin.length !== 4) { setError('Enter your 4-digit PIN.'); return; }
-    setLoading(true); setError('');
-    const res  = await fetch('/api/auth/setup-pin', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError(data.error || 'Incorrect PIN.');
-      if (data.noPIN) router.push('/dashboard/settings');
-      return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/setup-pin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || 'Incorrect PIN.');
+        if (data.noPIN) router.push('/dashboard/settings');
+        return;
+      }
+      setStep('confirm');
+    } catch {
+      setError('Unable to verify your PIN. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setStep('confirm');
   }
 
   async function handleConfirm() {
@@ -190,7 +196,7 @@ export default function TransferPage() {
         </div>
       )}
 
-      {error && (
+      {error && step !== 'pin' && (
         <div ref={errorRef} role="alert" className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-5">
           <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
           <p className="text-sm text-citi-red font-medium">{error}</p>
@@ -310,6 +316,13 @@ export default function TransferPage() {
               Authorizing transfer of{' '}
               <strong className="text-citi-blue">{formatCurrency(parseFloat(form.amount || '0'))}</strong>
             </p>
+
+            {error && (
+              <div role="alert" className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-6 text-left">
+                <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
+                <p className="text-sm text-citi-red font-medium">{error}</p>
+              </div>
+            )}
 
             {/* PIN dots display */}
             <div className="flex justify-center gap-3 mb-8">

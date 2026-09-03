@@ -1,6 +1,6 @@
 'use client';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Shield, Bell, ChevronRight, Lock, CheckCircle, AlertCircle, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,82 @@ export default function SettingsPage() {
   const [pinLoading, setPinLoading] = useState(false);
   const [pinMsg, setPinMsg]   = useState({ text: '', type: '' });
   const [darkMode, setDarkMode] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImageMsg, setProfileImageMsg] = useState({ text: '', type: '' });
+  const [profileImageLoading, setProfileImageLoading] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/profile')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setProfileImage(data?.profileImage || null))
+      .catch(() => setProfileImage(null));
+  }, []);
+
+  async function uploadProfileImage(file: File) {
+    setProfileImageLoading(true);
+    setProfileImageMsg({ text: '', type: '' });
+    try {
+      const preview = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Preview failed'));
+        reader.readAsDataURL(file);
+      });
+      setProfileImage(preview);
+
+      const compressedImage = await new Promise<Blob>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+          const maxDimension = 512;
+          const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Compression failed')), 'image/jpeg', 0.82);
+        };
+        image.onerror = () => reject(new Error('Image could not be read'));
+        image.src = URL.createObjectURL(file);
+      });
+
+      const formData = new FormData();
+      formData.append('image', compressedImage, 'profile-picture.jpg');
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setProfileImage(data.profileImage);
+        setProfileImageMsg({ text: 'Profile picture updated.', type: 'success' });
+        window.dispatchEvent(new Event('profile-image-updated'));
+      } else {
+        setProfileImageMsg({ text: data.error || 'Upload failed.', type: 'error' });
+      }
+    } catch {
+      setProfileImageMsg({ text: 'Unable to upload the profile picture. Please try again.', type: 'error' });
+    } finally {
+      setProfileImageLoading(false);
+    }
+  }
+
+  async function selectProfileImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
+      setProfileImageMsg({ text: 'Choose an image up to 10 MB.', type: 'error' });
+      return;
+    }
+
+    setProfileImageFile(file);
+    await uploadProfileImage(file);
+  }
+
+  async function saveProfileImage() {
+    if (profileImageFile) await uploadProfileImage(profileImageFile);
+  }
 
   const tabs = [
     { id: 'profile',  label: 'Profile',  icon: User },
@@ -45,9 +121,9 @@ export default function SettingsPage() {
         <p className="text-citi-gray-500 text-sm mt-1">Manage your account preferences and security</p>
       </div>
 
-      <div className="flex gap-6">
-        <div className="w-52 flex-shrink-0">
-          <nav className="space-y-1">
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="w-full flex-shrink-0 lg:w-52">
+          <nav className="grid grid-cols-2 gap-1 lg:block lg:space-y-1">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab===id?'bg-citi-blue text-white':'text-citi-gray-600 hover:bg-citi-gray-100'}`}>
@@ -58,22 +134,39 @@ export default function SettingsPage() {
           </nav>
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           {activeTab === 'profile' && (
-            <div className="bg-white rounded-2xl border border-citi-gray-200 p-6 animate-fade-in">
+            <div className="bg-white rounded-2xl border border-citi-gray-200 p-4 sm:p-6 animate-fade-in">
               <h2 className="text-lg font-bold mb-6">Personal Information</h2>
               <div className="flex items-center gap-4 mb-8 p-4 bg-citi-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-citi-blue rounded-full flex items-center justify-center">
-                  <span className="text-white font-black text-xl">{session?.user?.firstName?.[0]}{session?.user?.lastName?.[0]}</span>
+                <div className="w-16 h-16 bg-citi-blue rounded-full flex items-center justify-center overflow-hidden">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-white font-black text-xl">{session?.user?.firstName?.[0]}{session?.user?.lastName?.[0]}</span>
+                  )}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold text-citi-gray-800">{session?.user?.firstName} {session?.user?.lastName}</p>
-                  <p className="text-sm text-citi-gray-500">{session?.user?.email}</p>
+                  <p className="break-all text-sm text-citi-gray-500">{session?.user?.email}</p>
                   <p className="text-xs text-citi-green font-medium mt-0.5">✓ Verified Account</p>
                 </div>
               </div>
+              <div className="mb-6 flex flex-wrap items-center gap-3">
+                <label className="citi-btn-secondary w-full cursor-pointer text-center sm:w-auto">
+                  Choose Profile Picture
+                  <input type="file" accept="image/*" onChange={selectProfileImage} className="sr-only" />
+                </label>
+                <Button onClick={saveProfileImage} loading={profileImageLoading} disabled={!profileImageFile} className="w-full sm:w-auto">Save Picture</Button>
+                {profileImageLoading && <span className="text-sm text-citi-gray-500">Uploading...</span>}
+              </div>
+              {profileImageMsg.text && (
+                <p className={`text-sm mb-5 ${profileImageMsg.type === 'success' ? 'text-citi-green' : 'text-citi-red'}`}>
+                  {profileImageMsg.text}
+                </p>
+              )}
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input label="First Name" defaultValue={session?.user?.firstName} disabled />
                   <Input label="Last Name" defaultValue={session?.user?.lastName} disabled />
                 </div>

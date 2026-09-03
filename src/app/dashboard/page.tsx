@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowUpRight, Send, Download, CreditCard, RefreshCw, Eye, EyeOff, TrendingUp, DollarSign, ClipboardList, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Send, Download, CreditCard, RefreshCw, Eye, EyeOff, TrendingUp, DollarSign, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { BankCard } from '@/components/dashboard/bank-card';
 import { TransactionItem } from '@/components/dashboard/transaction-item';
@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string>('');
   const [hideBalance, setHideBalance] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [mobileSlide, setMobileSlide] = useState(0);
 
   async function loadData() {
     try {
@@ -37,6 +38,14 @@ export default function DashboardPage() {
   }
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    const carouselTimer = window.setInterval(() => {
+      setMobileSlide((current) => (current + 1) % 3);
+    }, 5000);
+
+    return () => window.clearInterval(carouselTimer);
+  }, []);
 
   if (loading) return <PageLoading />;
   if (!data) return (
@@ -90,7 +99,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Checking */}
-            <div className="bg-gradient-to-br from-citi-blue to-citi-blue-light rounded-2xl p-6 text-white relative overflow-hidden">
+            <div className="bg-[#00112B] sm:bg-gradient-to-br sm:from-citi-blue sm:to-citi-blue-light rounded-2xl p-6 text-white relative overflow-hidden">
               <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10" />
               <div className="relative">
                 <div className="flex justify-between items-start">
@@ -119,8 +128,66 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            <div className="sm:hidden relative aspect-[3/1] w-full overflow-hidden rounded-2xl border border-citi-gray-200 bg-white shadow-card">
+              {/* The sliding track container needs h-full so its children know what height to inherit */}
+              <div
+                className="flex h-full transition-transform duration-[3000ms] ease-out"
+                style={{ transform: `translateX(-${mobileSlide * 100}%)` }}
+              >
+                {['image3.png', 'image6.png', 'image2.png'].map((image, index) => (
+                  /* min-w-full forces each slide to be exactly 100% of the container width */
+                  <div
+                    key={`${image}-${index}`}
+                    className="w-full min-w-full h-full flex-shrink-0"
+                  >
+                    <img
+                      src={`/${image}`}
+                      alt={`Citibank account view ${index + 1}`}
+                      className="w-full h-full object-cover object-center block"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Left Navigation Button */}
+              <button
+                type="button"
+                aria-label="Previous account image"
+                onClick={() => setMobileSlide((current) => (current === 0 ? 2 : current - 1))}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
+              >
+                <ChevronLeft className="h-4 w-4 text-white" />
+              </button>
+
+              {/* Right Navigation Button */}
+              <button
+                type="button"
+                aria-label="Next account image"
+                onClick={() => setMobileSlide((current) => (current === 2 ? 0 : current + 1))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
+              >
+                <ChevronRight className="h-4 w-4 text-white" />
+              </button>
+
+              {/* Dot Indicators */}
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+                {[0, 1, 2].map((index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Show account image ${index + 1}`}
+                    onClick={() => setMobileSlide(index)}
+                    className={`h-1.5 rounded-full transition-all ${mobileSlide === index ? 'w-5 bg-citi-blue' : 'w-1.5 bg-citi-gray-400'
+                      }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+
+
             {/* Savings */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+            <div className="hidden sm:block bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
               <div className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full bg-white/5" />
               <div className="relative">
                 <p className="text-slate-400 text-xs font-medium uppercase tracking-wide mb-1">Savings Account</p>
@@ -169,7 +236,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs text-citi-gray-400 font-medium">Account Status</p>
                 <p className={`text-sm font-bold mt-0.5 ${account?.status === 'ACTIVE' ? 'text-citi-green' :
-                    account?.status === 'FROZEN' ? 'text-yellow-600' : 'text-citi-red'
+                  account?.status === 'FROZEN' ? 'text-yellow-600' : 'text-citi-red'
                   }`}>
                   {account?.status ?? '—'}
                 </p>

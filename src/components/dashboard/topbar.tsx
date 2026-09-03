@@ -1,5 +1,6 @@
 'use client';
 import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 import { Bell, Headset, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,6 +11,18 @@ export function Topbar({ unread = 0 }: TopbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const firstName = session?.user?.firstName || 'there';
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProfileImage = () => fetch('/api/profile')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setProfileImage(data?.profileImage || null))
+      .catch(() => setProfileImage(null));
+
+    loadProfileImage();
+    window.addEventListener('profile-image-updated', loadProfileImage);
+    return () => window.removeEventListener('profile-image-updated', loadProfileImage);
+  }, [pathname]);
 
   function getGreeting() {
     const h = new Date().getHours();
@@ -57,9 +70,13 @@ export function Topbar({ unread = 0 }: TopbarProps) {
 
         <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-3 border-l border-citi-gray-200">
           <div className="w-8 h-8 sm:w-9 sm:h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-sm font-bold">
-              {session?.user?.firstName?.[0]}{session?.user?.lastName?.[0]}
-            </span>
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="h-full w-full rounded-full object-cover" />
+            ) : (
+              <span className="text-white text-sm font-bold">
+                {session?.user?.firstName?.[0]}{session?.user?.lastName?.[0]}
+              </span>
+            )}
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-semibold text-citi-gray-800 leading-none">

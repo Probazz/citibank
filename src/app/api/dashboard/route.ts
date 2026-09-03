@@ -97,6 +97,7 @@ export async function GET(req: NextRequest) {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
+        profileImage: user.profileImage,
         email: user.email,
         phone: user.phone,
       },
