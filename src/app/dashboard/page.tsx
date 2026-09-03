@@ -190,7 +190,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="order-2 -mt-4 -mb-5 bg-white rounded-2xl sm:mt-0 sm:p-5 border border-citi-gray-200">
+          <div className="order-2 mt-0 mb-0 bg-white rounded-2xl sm:mt-0 sm:p-5 border border-citi-gray-200">
             <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-1 sm:p-3">
               {quickActions.map(({ label, icon: Icon, href, color, emoji }) => (
                 <Link
