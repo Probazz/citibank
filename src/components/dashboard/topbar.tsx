@@ -69,7 +69,7 @@ export function Topbar({ unread = 0 }: TopbarProps) {
         
 
         <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-3 border-l border-citi-gray-200">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 sm:w-9 sm:h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
             {profileImage ? (
               <img src={profileImage} alt="Profile" className="h-full w-full rounded-full object-cover" />
             ) : (

@@ -68,12 +68,11 @@ export default function DashboardPage() {
   const isSuspended = account?.status === 'SUSPENDED';
 
   const quickActions = [
-    { label: 'Transfer', icon: Send, href: '/dashboard/transfer', color: 'bg-citi-blue text-white', emoji: '💸' },
-    { label: 'Withdraw', icon: Download, href: '/dashboard/withdraw', color: 'bg-citi-blue text-white', emoji: '🏧' },
-    { label: 'Transactions', icon: ArrowUpRight, href: '/dashboard/transactions', color: 'bg-citi-blue text-white', emoji: '📋' },
-    { label: 'Cards', icon: CreditCard, href: '/dashboard/cards', color: 'bg-citi-blue text-white', emoji: '📋' },
-    { label: 'Loan', icon: DollarSign, href: '/dashboard/loan', color: 'bg-citi-blue text-white', emoji: '🏦' },
-    { label: 'Pay Bills', icon: ClipboardList, href: '/dashboard/pay-bills', color: 'bg-citi-blue text-white', emoji: '🧾' },
+    { label: 'Transfer', icon: Send, href: '/dashboard/transfer', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '💸' },
+    { label: 'Withdraw', icon: Download, href: '/dashboard/withdraw', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🏧' },
+     { label: 'Cards', icon: CreditCard, href: '/dashboard/cards', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '📋' },
+    { label: 'Loan', icon: DollarSign, href: '/dashboard/loan', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🏦' },
+    { label: 'Pay Bills', icon: ClipboardList, href: '/dashboard/pay-bills', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🧾' },
   ];
 
   return (
@@ -93,10 +92,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* Left column */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="contents xl:col-span-2 sm:block sm:space-y-6">
 
           {/* Balance cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 sm:-mt-4">
 
             {/* Checking */}
             <div className="bg-[#00112B] sm:bg-gradient-to-br sm:from-citi-blue sm:to-citi-blue-light rounded-2xl p-6 text-white relative overflow-hidden">
@@ -128,64 +127,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="sm:hidden relative aspect-[3/1] w-full overflow-hidden rounded-2xl border border-citi-gray-200 bg-white shadow-card">
-              {/* The sliding track container needs h-full so its children know what height to inherit */}
-              <div
-                className="flex h-full transition-transform duration-[3000ms] ease-out"
-                style={{ transform: `translateX(-${mobileSlide * 100}%)` }}
-              >
-                {['image3.png', 'image6.png', 'image2.png'].map((image, index) => (
-                  /* min-w-full forces each slide to be exactly 100% of the container width */
-                  <div
-                    key={`${image}-${index}`}
-                    className="w-full min-w-full h-full flex-shrink-0"
-                  >
-                    <img
-                      src={`/${image}`}
-                      alt={`Citibank account view ${index + 1}`}
-                      className="w-full h-full object-cover object-center block"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Left Navigation Button */}
-              <button
-                type="button"
-                aria-label="Previous account image"
-                onClick={() => setMobileSlide((current) => (current === 0 ? 2 : current - 1))}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
-              >
-                <ChevronLeft className="h-4 w-4 text-white" />
-              </button>
-
-              {/* Right Navigation Button */}
-              <button
-                type="button"
-                aria-label="Next account image"
-                onClick={() => setMobileSlide((current) => (current === 2 ? 0 : current + 1))}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
-              >
-                <ChevronRight className="h-4 w-4 text-white" />
-              </button>
-
-              {/* Dot Indicators */}
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
-                {[0, 1, 2].map((index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    aria-label={`Show account image ${index + 1}`}
-                    onClick={() => setMobileSlide(index)}
-                    className={`h-1.5 rounded-full transition-all ${mobileSlide === index ? 'w-5 bg-citi-blue' : 'w-1.5 bg-citi-gray-400'
-                      }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-
-
             {/* Savings */}
             <div className="hidden sm:block bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
               <div className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full bg-white/5" />
@@ -206,7 +147,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Account details */}
-          <div className="bg-white rounded-2xl border border-citi-gray-200 p-3 sm:p-5 min-w-0">
+          <div className="order-5 bg-white rounded-2xl border border-citi-gray-200 p-3 sm:p-5 min-w-0">
             <h3 className="text-sm font-bold text-citi-gray-700 mb-4 uppercase tracking-wide">Account Details</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
@@ -249,18 +190,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-citi-gray-200 p-5">
-            <h3 className="text-sm font-bold text-citi-gray-700 mb-4 uppercase tracking-wide">Quick Actions</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="order-2 -mt-4 -mb-5 bg-white rounded-2xl sm:mt-0 sm:p-5 border border-citi-gray-200">
+            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-1 sm:p-3">
               {quickActions.map(({ label, icon: Icon, href, color, emoji }) => (
                 <Link
                   key={label}
                   href={isSuspended ? '#' : href}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors group ${isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-citi-gray-50'
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-colors group ${isSuspended ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white'
                     }`}
                 >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color} group-hover:scale-105 transition-transform shadow-sm`}>
-                    <Icon className="w-5 h-5" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color} group-hover:scale-105 transition-transform shadow-sm border border-citi-gray-300`}>
+                    <Icon className="w-5 h-5" strokeWidth={3} />
                   </div>
                   <span className="text-xs font-medium text-citi-gray-600 text-center leading-tight">{label}</span>
                 </Link>
@@ -272,14 +212,60 @@ export default function DashboardPage() {
               </p>
             )}
           </div>
+
+          <div className="order-3 sm:hidden relative aspect-[3/1] w-full overflow-hidden rounded-2xl border border-citi-gray-200 bg-white shadow-card">
+            <div
+              className="flex h-full transition-transform duration-[3000ms] ease-out"
+              style={{ transform: `translateX(-${mobileSlide * 100}%)` }}
+            >
+              {['image3.png', 'image6.png', 'image2.png'].map((image, index) => (
+                <div key={`${image}-${index}`} className="w-full min-w-full h-full flex-shrink-0">
+                  <img
+                    src={`/${image}`}
+                    alt={`Citibank account view ${index + 1}`}
+                    className="w-full h-full object-cover object-center block"
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-label="Previous account image"
+              onClick={() => setMobileSlide((current) => (current === 0 ? 2 : current - 1))}
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
+            >
+              <ChevronLeft className="h-4 w-4 text-white" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next account image"
+              onClick={() => setMobileSlide((current) => (current === 2 ? 0 : current + 1))}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-transparent p-2 text-citi-blue shadow-sm"
+            >
+              <ChevronRight className="h-4 w-4 text-white" />
+            </button>
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+              {[0, 1, 2].map((index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Show account image ${index + 1}`}
+                  onClick={() => setMobileSlide(index)}
+                  className={`h-1.5 rounded-full transition-all ${mobileSlide === index ? 'w-5 bg-citi-blue' : 'w-1.5 bg-citi-gray-400'
+                    }`}
+                />
+              ))}
+            </div>
+          </div>
+          
         </div>
 
         {/* Right column */}
-        <div className="space-y-6">
+        <div className="contents sm:block sm:space-y-6">
 
           {/* Bank Card */}
           {account?.cards?.length > 0 && (
-            <div>
+            <div className="hidden sm:block">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-citi-gray-700 uppercase tracking-wide">My Card</h3>
                 <Link href="/dashboard/cards" className="text-xs text-citi-blue font-medium hover:underline">Manage</Link>
@@ -289,7 +275,7 @@ export default function DashboardPage() {
           )}
 
           {/* Recent Transactions — CLICKABLE */}
-          <div className="bg-white rounded-2xl border border-citi-gray-200 p-5">
+          <div className="order-4 bg-white rounded-2xl border border-citi-gray-200 p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-citi-gray-700 uppercase tracking-wide">Recent Activity</h3>
               <div className="flex items-center gap-2">
