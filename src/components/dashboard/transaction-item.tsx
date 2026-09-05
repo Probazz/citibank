@@ -4,20 +4,24 @@ import { Badge } from '@/components/ui/index';
 import { ArrowUpRight, ArrowDownLeft, RefreshCw, Building } from 'lucide-react';
 import type { Transaction } from '@/types';
 
-interface TransactionItemProps { transaction: Transaction; userId?: string; }
+interface TransactionItemProps {
+  transaction: Transaction;
+  userId?: string;
+  whiteIconBackground?: boolean;
+}
 
 const typeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  CREDIT:       { label: 'Credit',        icon: <ArrowDownLeft className="w-4 h-4" />,  color: 'bg-citi-green-light text-citi-green' },
-  DEBIT:        { label: 'Debit',         icon: <ArrowUpRight className="w-4 h-4" />,   color: 'bg-citi-red-light text-citi-red' },
-  TRANSFER_IN:  { label: 'Transfer In',   icon: <ArrowDownLeft className="w-4 h-4" />,  color: 'bg-citi-green-light text-citi-green' },
-  TRANSFER_OUT: { label: 'Transfer Out',  icon: <ArrowUpRight className="w-4 h-4" />,   color: 'bg-citi-red-light text-citi-red' },
-  WITHDRAWAL:   { label: 'Withdrawal',    icon: <ArrowUpRight className="w-4 h-4" />,   color: 'bg-yellow-50 text-yellow-600' },
-  DEPOSIT:      { label: 'Deposit',       icon: <ArrowDownLeft className="w-4 h-4" />,  color: 'bg-citi-green-light text-citi-green' },
-  ADMIN_CREDIT: { label: 'Credit',        icon: <Building className="w-4 h-4" />,       color: 'bg-citi-green-light text-citi-green' },
-  ADMIN_DEBIT:  { label: 'Debit',         icon: <Building className="w-4 h-4" />,       color: 'bg-citi-red-light text-citi-red' },
+  CREDIT:       { label: 'Credit',        icon: <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />,  color: 'bg-citi-green-light text-citi-green' },
+  DEBIT:        { label: 'Debit',         icon: <ArrowUpRight className="w-6 h-6" strokeWidth={3} />,   color: 'bg-citi-red-light text-citi-red' },
+  TRANSFER_IN:  { label: 'Transfer In',   icon: <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />,  color: 'bg-citi-green-light text-citi-green' },
+  TRANSFER_OUT: { label: 'Transfer Out',  icon: <ArrowUpRight className="w-4 h-4" strokeWidth={3} />,   color: 'bg-citi-red-light text-citi-red' },
+  WITHDRAWAL:   { label: 'Withdrawal',    icon: <ArrowUpRight className="w-4 h-4" strokeWidth={3} />,   color: 'bg-yellow-50 text-yellow-600' },
+  DEPOSIT:      { label: 'Deposit',       icon: <ArrowDownLeft className="w-4 h-4" strokeWidth={3} />,  color: 'bg-citi-green-light text-citi-green' },
+  ADMIN_CREDIT: { label: 'Credit',        icon: <Building className="w-4 h-4" strokeWidth={3} />,       color: 'bg-citi-green-light text-citi-green' },
+  ADMIN_DEBIT:  { label: 'Debit',         icon: <Building className="w-4 h-4" strokeWidth={3} />,       color: 'bg-citi-red-light text-citi-red' },
 };
 
-export function TransactionItem({ transaction: t, userId }: TransactionItemProps) {
+export function TransactionItem({ transaction: t, userId, whiteIconBackground = false }: TransactionItemProps) {
   const config = typeConfig[t.type] || typeConfig.CREDIT;
   const isCredit = ['CREDIT', 'TRANSFER_IN', 'ADMIN_CREDIT', 'DEPOSIT'].includes(t.type);
   const amountColor = isCredit ? 'text-citi-green' : 'text-citi-gray-800';
@@ -34,8 +38,8 @@ export function TransactionItem({ transaction: t, userId }: TransactionItemProps
   }
 
   return (
-    <div className="flex items-center gap-4 py-4 border-b border-citi-gray-100 last:border-0 hover:bg-citi-gray-50 px-2 -mx-2 rounded-lg transition-colors cursor-pointer">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${config.color}`}>
+    <div className="flex items-center gap-4 py-4 border-b border-citi-gray-300 last:border-0 hover:bg-citi-gray-50 px-2 -mx-2 rounded-lg transition-colors cursor-pointer">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${whiteIconBackground ? 'bg-transparent -ml-1 -mr-3' : config.color} ${whiteIconBackground ? config.color.split(' ').find((className) => className.startsWith('text-')) : ''}`}>
         {config.icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -45,7 +49,7 @@ export function TransactionItem({ transaction: t, userId }: TransactionItemProps
           {t.category && <span className="text-xs text-citi-gray-400">· {t.category}</span>}
         </div>
       </div>
-      <div className="text-right flex-shrink-0">
+      <div className="text-right flex-shrink-0 mr-2">
         <p className={`text-sm font-bold ${amountColor}`}>
           {isCredit ? '+' : '-'}{formatCurrency(t.amount)}
         </p>

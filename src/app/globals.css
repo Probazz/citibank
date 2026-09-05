@@ -91,6 +91,8 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes pulse-gentle { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+@keyframes checkingDetailsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 .animate-fade-in { animation: fadeIn .3s ease forwards; }
 .animate-slide-in { animation: slideIn .3s ease forwards; }
+.checking-details-marquee { animation: checkingDetailsMarquee 12s linear infinite; }
