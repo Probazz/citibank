@@ -213,7 +213,7 @@ export default function DashboardPage() {
                     className="w-[35%] overflow-hidden text-right sm:hidden"
                     aria-label={`Account number ${account?.accountNumber || 'unavailable'}, routing number ${account?.routingNumber || 'unavailable'}`}
                   >
-                    <div className="checking-details-marquee flex w-max whitespace-nowrap text-[8px] tabular-nums tracking-[0.08em] text-blue-200/70" aria-hidden="true">
+                    <div className="checking-details-marquee flex w-max whitespace-nowrap text-[8px] tabular-nums tracking-[0.08em] text-blue-200/90" aria-hidden="true">
                       <span>
                         ACC {account?.accountNumber || '—'} <span className="mx-2 text-blue-200/40">•</span> RTG {account?.routingNumber || '—'} <span className="mx-4 text-blue-200/40">•</span>
                       </span>
