@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
     const currencies = requestedCurrencies.filter((currency): currency is (typeof SUPPORTED_CURRENCIES)[number] =>
       SUPPORTED_CURRENCIES.includes(currency as (typeof SUPPORTED_CURRENCIES)[number]),
     );
-    const selectedCurrencies = currencies.length ? [...new Set(currencies)] : ['EUR', 'GBP', 'JPY', 'CAD'];
+    const selectedCurrencies = currencies.length
+      ? currencies.filter((currency, index) => currencies.indexOf(currency) === index)
+      : ['EUR', 'GBP', 'JPY', 'CAD'];
     const response = await fetch(
       `https://open.er-api.com/v6/latest/USD?symbols=${selectedCurrencies.join(',')}`,
       { cache: 'no-store' },
