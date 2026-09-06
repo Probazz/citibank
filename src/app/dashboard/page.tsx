@@ -34,6 +34,16 @@ const CURRENCY_OPTIONS = [
   { code: 'HKD', symbol: '$', name: 'Hong Kong Dollar', region: 'Hong Kong', flagCode: 'hk', decimals: 4 },
 ];
 const DEFAULT_CURRENCIES = ['EUR', 'GBP', 'JPY', 'CAD'];
+const RATE_BACKGROUND_GRADIENTS = [
+  'linear-gradient(135deg, #00112B 0%, #003B70 55%, #2A9D8F 100%)',
+  'linear-gradient(135deg, #00112B 0%, #003B70 55%, #AF9964 100%)',
+  'linear-gradient(135deg, #00112B 0%, #245B73 55%, #D4A373 100%)',
+  'linear-gradient(135deg, #00112B 0%, #3A506B 55%, #C97C5D 100%)',
+  'linear-gradient(135deg, #00112B 0%, #315C5A 55%, #B7B7A4 100%)',
+  'linear-gradient(135deg, #1c1e20 0%, #245B73 55%, #d47373 100%)',
+  'linear-gradient(135deg, #63796a 0%, #3A506B 55%, #48602a 100%)',
+  'linear-gradient(135deg, #503700 0%, #315C5A 55%, #B7B7A4 100%)',
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -154,7 +164,7 @@ export default function DashboardPage() {
   const quickActions = [
     { label: 'Transfer', icon: Send, href: '/dashboard/transfer', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '💸' },
     { label: 'Withdraw', icon: Download, href: '/dashboard/withdraw', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🏧' },
-     { label: 'Cards', icon: CreditCard, href: '/dashboard/cards', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '📋' },
+    { label: 'Cards', icon: CreditCard, href: '/dashboard/cards', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '📋' },
     { label: 'Loan', icon: DollarSign, href: '/dashboard/loan', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🏦' },
     { label: 'Pay Bills', icon: ClipboardList, href: '/dashboard/pay-bills', color: 'bg-white text-[#00112B] sm:bg-citi-blue sm:text-white', emoji: '🧾' },
   ];
@@ -213,7 +223,7 @@ export default function DashboardPage() {
                     className="w-[35%] overflow-hidden text-right sm:hidden"
                     aria-label={`Account number ${account?.accountNumber || 'unavailable'}, routing number ${account?.routingNumber || 'unavailable'}`}
                   >
-                    <div className="checking-details-marquee flex w-max whitespace-nowrap text-[8px] tabular-nums tracking-[0.08em] text-blue-200/90" aria-hidden="true">
+                    <div className="checking-details-marquee flex w-max whitespace-nowrap text-[9px] tabular-nums tracking-[0.08em] text-blue-200/90" aria-hidden="true">
                       <span>
                         ACC {account?.accountNumber || '—'} <span className="mx-2 text-blue-200/40">•</span> RTG {account?.routingNumber || '—'} <span className="mx-4 text-blue-200/40">•</span>
                       </span>
@@ -356,7 +366,7 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-          
+
         </div>
 
         {/* Right column */}
@@ -396,11 +406,11 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-1">
-                {recentTransactions.map((t: any) => (
+                {recentTransactions.map((t: any, index: number) => (
                   <div
                     key={t.id}
                     onClick={() => router.push(`/dashboard/receipt?id=${t.id}`)}
-                    className="cursor-pointer hover:bg-citi-gray-50 rounded-xl transition-colors group relative"
+                    className={`cursor-pointer hover:bg-citi-gray-50 rounded-xl transition-colors group relative ${index >= 2 ? 'hidden sm:block' : ''}`}
                   >
                     <TransactionItem transaction={t} whiteIconBackground />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -413,23 +423,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Live exchange rates are kept compact on mobile to sit below recent activity. */}
-          <div className="order-5 sm:hidden overflow-hidden rounded-2xl border border-[#244b70] bg-gradient-to-br from-[#00112B] via-[#003B70] to-[#AF9964] p-3 text-white shadow-card">
-            <div className="mb-2 flex items-center justify-between">
-              <div>
-                <p className="text-[8px] font-semibold -mt-1 uppercase tracking-[0.16em] text-[#d7b56d]">Live market rates</p>
-                <h3 className="-mt-[2px] -mb-1 text-[13px] text-[#D1D4D7] font-bold tracking-tight">Your currency watchlist</h3>
-              </div>
-              <button
-                type="button"
-                aria-expanded={showCurrencyPicker}
-                aria-label="Customize currency watchlist"
-                onClick={() => setShowCurrencyPicker((current) => !current)}
-                className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px] font-semibold transition-colors ${showCurrencyPicker ? 'border-[#d7b56d] bg-[#d7b56d] text-[#00112B]' : 'border-white/20 text-blue-100 hover:border-white/40 hover:bg-white/10'}`}
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-                Customize
-              </button>
-            </div>
+          <div
+            className="order-5 sm:hidden overflow-hidden p-3 text-white shadow-card transition-all duration-700"
+            style={{
+              backgroundImage: RATE_BACKGROUND_GRADIENTS[rateSlide % RATE_BACKGROUND_GRADIENTS.length],
+            }}
+          >
+
 
             {showCurrencyPicker && (
               <div className="mb-4 rounded-xl border border-white/15 bg-black/15 p-3">
@@ -478,33 +478,31 @@ export default function DashboardPage() {
                     {exchangeRates.map(({ currency, rate }) => {
                       const currencyInfo = CURRENCY_OPTIONS.find((option) => option.code === currency) || CURRENCY_OPTIONS[0];
                       return (
-                      <div key={currency} className="w-full min-w-full flex-shrink-0">
-                        <div className="flex items-end justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={`https://flagcdn.com/40x30/${currencyInfo.flagCode}.png`}
-                                alt={`${currencyInfo.name} flag`}
-                                width="30"
-                                height="22"
-                                className="h-[22px] w-[30px] rounded-[3px] object-cover shadow-sm"
-                              />
+                        <div key={currency} className="w-full min-w-full flex-shrink-0">
+                          <div className="flex items-end justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={`https://flagcdn.com/40x30/${currencyInfo.flagCode}.png`}
+                                  alt={`${currencyInfo.name} flag`}
+                                  width="30"
+                                  height="22"
+                                  className="h-[22px] w-[30px] rounded-[3px] object-cover shadow-sm"
+                                />
                                 <p className="text-lg font-bold tracking-tight">{currency} <span className="font-medium text-blue-200">{currencyInfo.symbol}</span></p>
                               </div>
                               <p className="mt-1 text-xs text-blue-200">{currencyInfo.name} · 1 USD buys</p>
+                            </div>
+                            <p className="text-2xl font-semibold tabular-nums text-white">{currencyInfo.symbol}{rate.toFixed(currencyInfo.decimals)}</p>
                           </div>
-                            <p className="text-2xl font-semibold tabular-nums">{currencyInfo.symbol}{rate.toFixed(currencyInfo.decimals)}</p>
                         </div>
-                      </div>
                       );
                     })}
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <p className="text-[10px] text-blue-200">
-                    Updated {ratesUpdatedAt ? new Date(ratesUpdatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'just now'}
-                  </p>
-                  <div className="flex items-center gap-1">
+
+                  <div className="flex items-center gap-1 -mt-2">
                     <button
                       type="button"
                       aria-label="Previous exchange rate"
@@ -529,6 +527,18 @@ export default function DashboardPage() {
                       className="ml-1 rounded-full p-1 text-blue-200 hover:bg-white/10"
                     >
                       <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="-mt-2 flex items-center justify-between">
+                    <button
+                      type="button"
+                      aria-expanded={showCurrencyPicker}
+                      aria-label="Customize currency watchlist"
+                      onClick={() => setShowCurrencyPicker((current) => !current)}
+                      className={`flex items-center mt-1 gap-1 rounded-lg border px-1.5 py-1 text-[9px] font-semibold transition-colors ${showCurrencyPicker ? 'border-[#d7b56d] bg-[#d7b56d] text-[#00112B]' : 'border-white/20 text-blue-100 hover:border-white/40 hover:bg-white/10'}`}
+                    >
+                      <Settings2 className="h-3 w-3" />
+                      Customize
                     </button>
                   </div>
                 </div>
