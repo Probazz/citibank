@@ -173,15 +173,21 @@ export default function DashboardPage() {
     <div className="space-y-6 animate-fade-in">
 
       {/* Account status warning */}
-      {account?.status && account.status !== 'ACTIVE' && (
-        <div className="p-4 bg-citi-red-light border border-red-200 rounded-xl">
-          <p className="text-citi-red font-semibold text-sm">
-            {isFrozen
-              ? '🔒Access Denied: Your account is currently under regulatory review. Deposit-only mode is active.'
-              : '⚠️ Your account is suspended. Contact support immediately at citibanksupport4@gmail.com.'}
-          </p>
+
+      {isFrozen && (
+        <div className="-mb-10 -mt-3 text-citi-red">
+          <div className="account-status-marquee flex w-max whitespace-nowrap gap-72">
+            <span className="px-4 py-3 text-sm font-semibold">
+              🚫Access Denied: Your account is currently under regulatory review.🚫
+            </span>
+            <span aria-hidden="true" className="px-4 py-3 text-sm font-semibold">
+              🚫Access Denied: Your account is currently under regulatory review.🚫 
+            </span>
+          </div>
         </div>
       )}
+
+     
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
@@ -315,11 +321,6 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
-            {(isFrozen || isSuspended) && (
-              <p className="text-xs text-citi-red text-center mt-3">
-                Transactions are disabled while your account is {account?.status?.toLowerCase()}.
-              </p>
-            )}
           </div>
 
           <div className="order-3 sm:hidden relative aspect-[3/1] w-full overflow-hidden rounded-2xl border border-citi-gray-200 bg-white shadow-card">

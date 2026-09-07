@@ -92,7 +92,9 @@ body {
 @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes pulse-gentle { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
 @keyframes checkingDetailsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes accountStatusMarquee { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 9rem)); } }
 
 .animate-fade-in { animation: fadeIn .3s ease forwards; }
 .animate-slide-in { animation: slideIn .3s ease forwards; }
 .checking-details-marquee { animation: checkingDetailsMarquee 12s linear infinite; }
+.account-status-marquee { animation: accountStatusMarquee 12s linear infinite; }

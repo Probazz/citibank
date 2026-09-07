@@ -19,6 +19,8 @@ export default function TransferPage() {
   const [pin, setPin]         = useState('');
   const [reference, setReference]   = useState('');
   const [txId, setTxId]             = useState('');
+  const [accountStatus, setAccountStatus] = useState<string | null>(null);
+  const [showRestrictionNotice, setShowRestrictionNotice] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState({
     recipientAccountNumber: '',
@@ -31,6 +33,13 @@ export default function TransferPage() {
   });
 
   const update = (f: string, v: string) => setForm(p => ({ ...p, [f]: v }));
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setAccountStatus(data?.account?.status || null))
+      .catch(() => setAccountStatus(null));
+  }, []);
 
   useEffect(() => {
     if (step === 'pin' && error) {
@@ -82,6 +91,11 @@ export default function TransferPage() {
   }
 
   async function handleConfirm() {
+    if (accountStatus === 'FROZEN') {
+      setShowRestrictionNotice(true);
+      return;
+    }
+
     setLoading(true); setError('');
     try {
       const res  = await fetch('/api/transactions', {
@@ -383,9 +397,35 @@ export default function TransferPage() {
         {/* ── STEP: CONFIRM ── */}
         {step === 'confirm' && (
           <div className="animate-fade-in">
-            <h2 className="text-lg font-bold text-citi-gray-800 mb-5">Confirm Transfer</h2>
+            {showRestrictionNotice ? (
+              <div className="rounded-xl border border-red-200 bg-citi-red-light p-4 text-center">
+                <AlertCircle className="mx-auto mb-2 h-6 w-6 text-citi-red" />
+                <p className="text-sm font-semibold text-citi-red">
+                  Access Denied: Your account is restricted and currently under regulatory review.
+                </p>
+                <p className="mt-1 text-xs text-red-700">
+                  Click contact support for further assistance.
+                </p>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-citi-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-citi-blue-dark"
+                  >
+                    OK
+                  </Link>
+                  <Link
+                    href="/dashboard/support"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-citi-blue bg-white px-5 py-2.5 text-sm font-semibold text-citi-blue hover:bg-citi-blue-50"
+                  >
+                    Contact Support
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-citi-gray-800 mb-5">Confirm Transfer</h2>
 
-            <div className="bg-citi-gray-50 rounded-xl overflow-hidden mb-6">
+                <div className="bg-citi-gray-50 rounded-xl overflow-hidden mb-6">
               {[
                 ['To Account',  `${form.recipientAccountNumber.slice(-10)}`],
                 ...(form.recipientName ? [['Recipient',  form.recipientName]] : []),
@@ -402,18 +442,20 @@ export default function TransferPage() {
                   </span>
                 </div>
               ))}
-            </div>
+                </div>
 
-            <p className="text-xs text-citi-gray-400 text-center mb-5">
-              By confirming, you authorize this transfer. A receipt will be sent to your email.
-            </p>
+                <p className="text-xs text-citi-gray-400 text-center mb-5">
+                  By confirming, you authorize this transfer. A receipt will be sent to your email.
+                </p>
 
-            <div className="flex gap-3">
-              <Button variant="ghost" fullWidth onClick={() => setStep('form')}>Back</Button>
-              <Button onClick={handleConfirm} loading={loading} fullWidth>
-                Confirm & Send
-              </Button>
-            </div>
+              <div className="flex gap-3">
+                <Button variant="ghost" fullWidth onClick={() => setStep('form')}>Back</Button>
+                <Button onClick={handleConfirm} loading={loading} fullWidth>
+                  Confirm & Send
+                </Button>
+              </div>
+              </>
+            )}
           </div>
         )}
       </div>
