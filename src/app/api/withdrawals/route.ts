@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateReference } from '@/lib/utils';
 import { z } from 'zod';
+import { sendTransactionReceipt } from '@/lib/email';
 
 const withdrawalSchema = z.object({
   amount: z.number().positive().min(1),
@@ -87,6 +88,22 @@ export async function POST(req: NextRequest) {
         },
       }),
     ]);
+
+    void sendTransactionReceipt({
+      email: user.email,
+      firstName: user.firstName,
+      amount: data.amount,
+      type: 'WITHDRAWAL',
+      description: `Withdrawal to ${data.bankName} - ${data.accountName}`,
+      reference,
+      balanceAfter: user.account.balance - data.amount,
+      recipientName: data.accountName,
+      recipientBank: data.bankName,
+      date: new Date(),
+      status: 'Pending admin approval',
+    }).catch((error) => {
+      console.error('Withdrawal email failed:', error);
+    });
 
     return NextResponse.json({ message: 'Withdrawal request submitted successfully.' });
   } catch (err: any) {

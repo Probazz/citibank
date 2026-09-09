@@ -208,31 +208,32 @@ export async function POST(req: NextRequest) {
       // Send email receipts (non-blocking)
       try {
         const { sendTransactionReceipt } = await import('@/lib/email');
-        sendTransactionReceipt({
-          email:         sender.email,
-          firstName:     sender.firstName,
-          amount:        data.amount,
-          type:          'TRANSFER_OUT',
-          description:   data.description,
-          reference,
-          balanceAfter:  senderBalanceAfter,
-          recipientName: `${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
-          recipientBank: 'Citibank, N.A.',
-          date:          new Date(),
-        }).catch(console.error);
-
-        sendTransactionReceipt({
-          email:         recipientAccount.user.email,
-          firstName:     recipientAccount.user.firstName,
-          amount:        data.amount,
-          type:          'TRANSFER_IN',
-          description:   `Transfer from ${sender.firstName} ${sender.lastName}`,
-          reference,
-          balanceAfter:  recipientBalanceAfter,
-          recipientName: `${sender.firstName} ${sender.lastName}`,
-          recipientBank: 'Citibank, N.A.',
-          date:          new Date(),
-        }).catch(console.error);
+        await Promise.all([
+          sendTransactionReceipt({
+            email:         sender.email,
+            firstName:     sender.firstName,
+            amount:        data.amount,
+            type:          'TRANSFER_OUT',
+            description:   data.description,
+            reference,
+            balanceAfter:  senderBalanceAfter,
+            recipientName: `${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
+            recipientBank: 'Citibank, N.A.',
+            date:          new Date(),
+          }),
+          sendTransactionReceipt({
+            email:         recipientAccount.user.email,
+            firstName:     recipientAccount.user.firstName,
+            amount:        data.amount,
+            type:          'TRANSFER_IN',
+            description:   `Transfer from ${sender.firstName} ${sender.lastName}`,
+            reference,
+            balanceAfter:  recipientBalanceAfter,
+            recipientName: `${sender.firstName} ${sender.lastName}`,
+            recipientBank: 'Citibank, N.A.',
+            date:          new Date(),
+          }),
+        ]).catch(console.error);
       } catch {}
 
     } else {
@@ -273,7 +274,7 @@ export async function POST(req: NextRequest) {
       // Send email receipt (non-blocking)
       try {
         const { sendTransactionReceipt } = await import('@/lib/email');
-        sendTransactionReceipt({
+        await sendTransactionReceipt({
           email:         sender.email,
           firstName:     sender.firstName,
           amount:        data.amount,

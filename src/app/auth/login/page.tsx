@@ -72,7 +72,7 @@ export default function LoginPage() {
 
           <>
             <h2 className="text-3xl font-black text-citi-gray-800 mb-2">Welcome back</h2>
-            <p className="text-citi-gray-500 mb-8">Sign in to your Citi account</p>
+            <p className="text-citi-gray-500 mb-8">Sign in to your CitiBank account</p>
             {error && (
               <div className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-6">
                 <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
@@ -91,7 +91,7 @@ export default function LoginPage() {
               <Button type="submit" loading={loading} fullWidth size="lg">Sign In to Online Banking</Button>
             </form>
             <div className="mt-8 pt-6 border-t border-citi-gray-200">
-              <p className="text-center text-sm text-citi-gray-500">New to Citi? <Link href="/auth/register" className="text-citi-blue font-semibold hover:underline">Open an account</Link></p>
+              <p className="text-center text-sm text-citi-gray-500">New to CitiBank? <Link href="/auth/register" className="text-citi-blue font-semibold hover:underline">Open an account</Link></p>
             </div>
             <p className="mt-6 text-center text-xs text-citi-gray-400">🔒 Protected by 256-bit SSL encryption</p>
           </>

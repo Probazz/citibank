@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import { sendLoginNotification } from './email';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -27,6 +28,10 @@ export const authOptions: NextAuthOptions = {
         if (user.account?.status === 'SUSPENDED') {
           throw new Error('ACCOUNT_SUSPENDED');
         }
+
+        void sendLoginNotification(user.email, user.firstName).catch((error) => {
+          console.error('Login notification email failed:', error);
+        });
 
         return {    
           id: user.id,
@@ -79,6 +84,7 @@ declare module 'next-auth' {
       role: string;
       firstName: string;
       lastName: string;
+      accountStatus: string;
     };
   }
 }
