@@ -1,7 +1,7 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
 
-const FROM = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER;
+const FROM = 'citibanksupport4@gmail.com';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'citibanksupport4@gmail.com';
 const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
