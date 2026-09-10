@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { LayoutDashboard, Users, ArrowLeftRight, Download, FileText, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, ArrowLeftRight, Download, Bell, LogOut, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const nav = [
@@ -10,6 +10,7 @@ const nav = [
   { href: '/admin/users',          label: 'Users',        icon: Users },
   { href: '/admin/transactions',   label: 'Transactions', icon: ArrowLeftRight },
   { href: '/admin/withdrawals',    label: 'Withdrawals',  icon: Download },
+  { href: '/admin/notifications', label: 'Notifications', icon: Bell },
 ];
 
 export function AdminSidebar({ pendingWithdrawals = 0 }: { pendingWithdrawals?: number }) {

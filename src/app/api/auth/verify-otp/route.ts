@@ -17,13 +17,14 @@ export async function POST(req: NextRequest) {
     if (new Date() > user.otpExpires)
       return NextResponse.json({ error: 'Code has expired. Please request a new one.' }, { status: 400 });
 
-    // Clear OTP
-    const updateData: any = { otpCode: null, otpExpires: null, isEmailVerified: true };
+    const updateData: any = { isEmailVerified: true };
 
     // If password reset, update password too
     if (type === 'reset' && newPassword) {
       if (newPassword.length < 8) return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
       updateData.password = await bcrypt.hash(newPassword, 12);
+      updateData.otpCode = null;
+      updateData.otpExpires = null;
 
       try {
         const { sendPasswordChangedEmail } = await import('@/lib/email');

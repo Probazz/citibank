@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
 import { User, Mail, Lock, Phone, MapPin, Calendar, Eye, EyeOff, CheckCircle, ArrowRight, ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [userId, setUserId] = useState('');
   const [form, setForm] = useState({
     firstName: '', lastName: '', dateOfBirth: '',
     email: '', phone: '', address: '', city: '', state: '',
@@ -38,11 +36,8 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Registration failed.'); setLoading(false); return; }
-      // Sign in to get session
-      await signIn('credentials', { email: form.email, password: form.password, redirect: false });
-      setUserId(data.user.id);
       setLoading(false);
-      setStep(3); // Go to PIN setup
+      router.push('/auth/login');
     } catch { setError('Something went wrong.'); setLoading(false); }
   }
 

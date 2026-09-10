@@ -140,6 +140,25 @@ export async function sendSupportReplyEmail(email: string, name: string, message
   });
 }
 
+export async function sendSupportSecurityRestrictionEmail(email: string, firstName: string) {
+  const content = `
+    <h2 class="title">Important account security notice</h2>
+    <p class="text">Dear <strong>${firstName}</strong>,</p>
+    <p class="text">We apologize for any inconvenience this may have caused and appreciate you contacting us.</p>
+    <p class="text">We detected a recent login attempt from an unfamiliar location, and as a precautionary security measure, your account has been temporarily restricted.</p>
+    <p class="text">To restore access to your account and continue using our banking services, please visit your nearest branch for in-person identity verification. Our team will assist you with the verification process and help restore your account access.</p>
+    <div class="warning"><p>For your security, please do not share your password, PIN, OTP, or other confidential account information with anyone.</p></div>
+    <p class="text">Thank you for your understanding and cooperation.</p>
+    <p class="text">Kind regards,<br/>Customer Support Team<br/>CitiBank Plc</p>`;
+
+  await sendEmail({
+    to: email,
+    subject: 'Important security notice about your account',
+    html: baseTemplate(content),
+    text: `Dear ${firstName},\n\nWe apologize for any inconvenience this may have caused and appreciate you contacting us.\n\nWe detected a recent login attempt from an unfamiliar location, and as a precautionary security measure, your account has been temporarily restricted.\n\nTo restore access to your account, please visit your nearest branch for in-person identity verification.\n\nFor your security, please do not share your password, PIN, OTP, or other confidential account information with anyone.\n\nThank you for your understanding and cooperation.\n\nKind regards,\nCustomer Support Team\nCitiBank Plc`,
+  });
+}
+
 export async function sendLoginOTP(email: string, firstName: string, otp: string) {
   const content = `
     <h2 class="title">Verify your identity</h2>

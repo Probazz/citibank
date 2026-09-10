@@ -11,12 +11,14 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        otp: { label: 'Verification code', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials.email.trim().toLowerCase();
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+          where: { email },
           include: { account: true },
         });
 
@@ -27,6 +29,17 @@ export const authOptions: NextAuthOptions = {
 
         if (user.account?.status === 'SUSPENDED') {
           throw new Error('ACCOUNT_SUSPENDED');
+        }
+
+        if (user.role !== 'ADMIN') {
+          if (!credentials.otp || !user.otpCode || !user.otpExpires || user.otpCode !== credentials.otp || new Date() > user.otpExpires) {
+            throw new Error('INVALID_OTP');
+          }
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { otpCode: null, otpExpires: null },
+          });
         }
 
         void sendLoginNotification(user.email, user.firstName).catch((error) => {

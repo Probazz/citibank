@@ -26,15 +26,27 @@ export default function LoginPage() {
       return;
     }
 
-    if (res?.error) {
+    if (res?.error !== 'INVALID_OTP') {
       setError('Invalid email or password.');
       setLoading(false);
       return;
     }
 
+    const otpRes = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.email, type: 'login' }),
+    });
+    const otpData = await otpRes.json();
+    if (!otpRes.ok) {
+      setError(otpData.error || 'Unable to send verification code.');
+      setLoading(false);
+      return;
+    }
+
+    sessionStorage.setItem('citi-login-credentials', JSON.stringify(form));
     setLoading(false);
-    router.push('/dashboard');
-    router.refresh();
+    router.push(`/auth/login/otp?email=${encodeURIComponent(form.email)}`);
   }
 
   return (
@@ -88,7 +100,7 @@ export default function LoginPage() {
                   <Link href="/auth/forgot-password" className="text-xs text-citi-blue font-medium hover:underline">Forgot password?</Link>
                 </div>
               </div>
-              <Button type="submit" loading={loading} fullWidth size="lg">Sign In to Online Banking</Button>
+              <Button type="submit" loading={loading} fullWidth size="lg">Continue to sign in</Button>
             </form>
             <div className="mt-8 pt-6 border-t border-citi-gray-200">
               <p className="text-center text-sm text-citi-gray-500">New to CitiBank? <Link href="/auth/register" className="text-citi-blue font-semibold hover:underline">Open an account</Link></p>
@@ -99,4 +111,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+}9

@@ -44,6 +44,13 @@ enum WithdrawalStatus {
   REJECTED
 }
 
+enum SupportEmailJobStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -73,6 +80,7 @@ model User {
   withdrawalRequests   WithdrawalRequest[]
   notifications        Notification[]
   auditLogs            AuditLog[]
+  supportEmailJobs     SupportEmailJob[]
 }
 
 model Account {
@@ -154,6 +162,24 @@ model Notification {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+model SupportEmailJob {
+  id            String                @id @default(cuid())
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email         String
+  firstName     String
+  sendAt        DateTime
+  status        SupportEmailJobStatus @default(PENDING)
+  attempts      Int                   @default(0)
+  nextAttemptAt DateTime?
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime              @default(now())
+
+  @@index([status, sendAt])
+  @@index([status, nextAttemptAt])
 }
 
 model AuditLog {
