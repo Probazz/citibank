@@ -1,7 +1,7 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
 
-const FROM = 'citibanksupport4@gmail.com';
+const FROM = process.env.EMAIL_FROM || process.env.GMAIL_USER || 'citibanksupport4@gmail.com';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'citibanksupport4@gmail.com';
 const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
@@ -30,12 +30,21 @@ async function sendEmail({ to, subject, html, text }: { to: string; subject: str
     } as any;
     const transporter = nodemailer.createTransport(smtpOptions);
 
-    const info = await transporter.sendMail({ from: FROM, to, subject, html, text });
+    const sender = user || FROM;
+    const info = await transporter.sendMail({
+      from: sender,
+      to,
+      replyTo: FROM,
+      subject,
+      html,
+      text,
+      envelope: { from: sender, to },
+    });
 
     console.info('[email] SMTP accepted message:', {
       messageId: info.messageId,
       response: info.response,
-      from: FROM,
+      from: sender,
       to,
       subject,
     });
@@ -268,4 +277,31 @@ export async function sendSupportRequestEmail({ email, name, category, subject, 
       </div>`),
     text: `New support request\nFrom: ${name} (${email})\nCategory: ${category}\nSubject: ${subject}\n\n${message}`,
   });
+}
+
+export async function sendAdminUserEmail(email: string, firstName: string, subject: string, message: string) {
+  const escapedSubject = escapeHtml(subject);
+  const escapedMessage = escapeHtml(message).replace(/\n/g, '<br/>');
+  const content = `
+    <h2 class="title">${escapedSubject}</h2>
+    <p class="text">Dear <strong>${escapeHtml(firstName)}</strong>,</p>
+    <p class="text">${escapedMessage}</p>
+    <p class="small">Kind regards,<br/>Customer Support Team<br/>CitiBank Plc</p>`;
+
+  return sendEmail({
+    to: email,
+    subject,
+    html: baseTemplate(content),
+    text: `Dear ${firstName},\n\n${message}\n\nKind regards,\nCustomer Support Team\nCitiBank Plc`,
+  });
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  }[character] || character));
 }

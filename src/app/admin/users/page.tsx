@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { Search, DollarSign, Snowflake, ShieldCheck, Edit, Eye, Trash2 } from 'lucide-react';
+import { Search, DollarSign, Snowflake, ShieldCheck, Edit, Eye, Trash2, Mail } from 'lucide-react';
 import { FundModal } from '@/components/admin/fund-modal';
 import { Badge, Toast, useToast } from '@/components/ui/index';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,9 @@ export default function AdminUsersPage() {
   const [editBalanceUser, setEditBalanceUser] = useState<any>(null);
   const [newBalance, setNewBalance] = useState('');
   const [newSavings, setNewSavings] = useState('');
+  const [emailUser, setEmailUser] = useState<any>(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
   const [actionLoading, setActionLoading] = useState('');
   const { toast, showToast, hideToast } = useToast();
 
@@ -71,6 +74,24 @@ export default function AdminUsersPage() {
     if (res.ok) showToast(data.message, 'success');
     else showToast(data.error || 'Delete failed.', 'error');
     if (res.ok) load();
+  }
+
+  async function sendUserEmail() {
+    if (!emailUser) return;
+    setActionLoading(`email-${emailUser.id}`);
+    const res = await fetch('/api/admin/users/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: emailUser.id, subject: emailSubject, message: emailMessage }),
+    });
+    const data = await res.json();
+    setActionLoading('');
+    showToast(res.ok ? data.message : data.error || 'Email failed.', res.ok ? 'success' : 'error');
+    if (res.ok) {
+      setEmailUser(null);
+      setEmailSubject('');
+      setEmailMessage('');
+    }
   }
 
   return (
@@ -144,6 +165,9 @@ export default function AdminUsersPage() {
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setDetailUser(user)}>
                         <Eye className="w-3.5 h-3.5"/> View
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEmailUser(user)}>
+                        <Mail className="w-3.5 h-3.5"/> Email
                       </Button>
                       <Button size="sm" variant="secondary" onClick={() => router.push(`/admin/users/${user.id}`)}>
                         Dashboard
@@ -223,6 +247,28 @@ export default function AdminUsersPage() {
                   <p className="text-sm font-semibold text-citi-gray-800 break-all">{value}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={!!emailUser} onClose={() => setEmailUser(null)} title={`Email ${emailUser?.firstName || 'user'}`}>
+        {emailUser && (
+          <div className="space-y-4">
+            <div className="p-3 bg-citi-gray-50 rounded-lg">
+              <p className="text-sm font-semibold text-citi-gray-800">{emailUser.firstName} {emailUser.lastName}</p>
+              <p className="text-xs text-citi-gray-500">{emailUser.email}</p>
+            </div>
+            <Input label="Subject" placeholder="Enter email subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+            <div>
+              <label htmlFor="admin-email-message" className="citi-label">Message</label>
+              <textarea id="admin-email-message" rows={9} maxLength={10000} placeholder="Write your message..." value={emailMessage} onChange={e => setEmailMessage(e.target.value)} className="citi-input resize-y" />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="ghost" fullWidth onClick={() => setEmailUser(null)}>Cancel</Button>
+              <Button fullWidth loading={actionLoading===`email-${emailUser.id}`} onClick={sendUserEmail} disabled={emailSubject.trim().length < 3 || emailMessage.trim().length < 10}>
+                <Mail className="w-4 h-4" /> Send Email
+              </Button>
             </div>
           </div>
         )}
