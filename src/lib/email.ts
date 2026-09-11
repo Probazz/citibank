@@ -237,7 +237,7 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
     <h2 class="title">Transaction Confirmation</h2>
     <p class="text">Hi <strong>${firstName}</strong>, your transaction was processed successfully.</p>
     <div class="otp-box" style="text-align:left;padding:20px 24px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:22px">
         <span style="color:#5F6368">Amount</span>
         <span style="font-size:24px;font-weight:900;color:${color}">${sign}$${amount.toFixed(2)}</span>
       </div>
@@ -249,7 +249,7 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
       ...(recipientName ? [['Recipient', recipientName]] : []),
       ...(recipientBank ? [['Bank', recipientBank]] : []),
       ['Balance After', `$${balanceAfter.toFixed(2)}`],
-    ].map(([l, v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0"><span style="font-size:13px;color:#80868B">${l}</span><span style="font-size:13px;font-weight:600">${v}</span></div>`).join('')}
+    ].map(([l, v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #f0f0f0"><span style="font-size:13px;color:#80868B">${l}</span><span style="font-size:13px;font-weight:600;text-align:right">${v}</span></div>`).join('')}
     </div>
     <a href="${APP_URL}/dashboard/transactions" class="btn">View Transactions →</a>`;
   await sendEmail({

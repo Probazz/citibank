@@ -3,7 +3,7 @@
 import { signOut, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
-const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const LOGIN_PATH = '/auth/login';
 const LAST_ACTIVITY_KEY = 'citi-last-activity';
 
