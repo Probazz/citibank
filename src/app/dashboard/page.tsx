@@ -188,7 +188,7 @@ export default function DashboardPage() {
       )}
 
       {!isFrozen && (
-        <div className="-mb-10 -mt-3 text-citi-blue">
+        <div className="-mb-9 -mt-1 text-citi-blue">
           <div className="account-status-marquee1 flex w-max whitespace-nowrap gap-72">
             <span className="px-4 py-3 text-sm font-semibold">
               Your deposits are FDIC insured up to $250,000 &nbsp;&nbsp;|&nbsp;&nbsp;CitiBank Priority clients enjoy exclusive investment opportunities &nbsp;&nbsp;|&nbsp;&nbsp; Earn rewards on every purchase with your CitiBank Debit Card &nbsp;&nbsp;|&nbsp;&nbsp; 🌍Send money globally with competitive exchange rates &nbsp;&nbsp;|&nbsp;&nbsp; Set up account alerts to monitor your balance in real time &nbsp;&nbsp;|&nbsp;&nbsp; High-yield savings account — earn 4.65% APY &nbsp;&nbsp;|&nbsp;&nbsp;📱 Bank anytime, anywhere with CitiBank Online Banking &nbsp;&nbsp;|&nbsp;&nbsp; 🛡️256-bit SSL encryption protects every transaction &nbsp;&nbsp;|&nbsp;&nbsp; ⚡Instant transfers between Citi accounts 24/7 &nbsp;&nbsp;|&nbsp;&nbsp; Track your spending with real-time transaction updates &nbsp;&nbsp;|&nbsp;&nbsp; 🏦CitiBank, N.A. — Member FDIC &nbsp;&nbsp;|&nbsp;&nbsp; Equal Housing Lender &nbsp;&nbsp;|&nbsp;&nbsp; Business banking solutions tailored for your growth &nbsp;&nbsp;|&nbsp;&nbsp; 🎯No hidden fees on your CitiBank checking account &nbsp;&nbsp;|&nbsp;&nbsp; 24/7 customer support — Call 1-800-374-9700 &nbsp;&nbsp;|&nbsp;&nbsp; Two-factor authentication keeps your account secure &nbsp;&nbsp;|&nbsp;&nbsp; Withdraw cash at 65,000+ fee-free ATMs nationwide &nbsp;&nbsp;|&nbsp;&nbsp; Citi Priority — Banking built for your ambitions &nbsp;&nbsp;|&nbsp;&nbsp;

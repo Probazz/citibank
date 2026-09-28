@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle, Download, Share2, ArrowLeft, Copy, Check } from 'lucide-react';
+import { CheckCircle, Download, Share2, ArrowLeft, Copy, Check, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
@@ -18,6 +18,16 @@ export default function ReceiptPage() {
   function getCreditedBy(transaction: any) {
     if (transaction?.type !== 'ADMIN_CREDIT' || !transaction.metadata) return '';
     try { return JSON.parse(transaction.metadata).creditedBy || ''; } catch { return ''; }
+  }
+
+  function getWireMetadata(transaction: any) {
+    if (!transaction?.metadata) return null;
+    try {
+      const metadata = JSON.parse(transaction.metadata);
+      return metadata.transferType === 'INTERNATIONAL_WIRE' ? metadata : null;
+    } catch {
+      return null;
+    }
   }
 
   function getDisplayTransactionType(type: string) {
@@ -46,14 +56,29 @@ export default function ReceiptPage() {
     const isCredit = ['CREDIT','TRANSFER_IN','ADMIN_CREDIT','DEPOSIT'].includes(transaction.type);
     const isTransferIn = transaction.type === 'TRANSFER_IN';
     const isTransferOut = transaction.type === 'TRANSFER_OUT';
-    const sign     = isCredit ? '+' : '-';
-    const color    = isCredit ? '#1A8C4E' : '#D22630';
+    const isPending = transaction.status === 'PENDING';
+    const wireMetadata = getWireMetadata(transaction);
+    const wireFee = typeof wireMetadata?.estimatedFeeUsd === 'number' ? wireMetadata.estimatedFeeUsd : 0;
+    const feeBreakdown = wireMetadata?.feeBreakdown;
+    const sign     = isPending ? '' : isCredit ? '+' : '-';
+    const color    = isPending ? '#B7791F' : isCredit ? '#1A8C4E' : '#D22630';
+    const statusLabel = isPending ? 'Pending Review' : transaction.status === 'COMPLETED' ? 'Transaction Successful' : transaction.status;
 
     const rows = [
       ['Reference Number', transaction.reference],
       ['Transaction Type', getDisplayTransactionType(transaction.type)],
       ['Status',           transaction.status],
-      ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
+      ...(wireMetadata ? [
+        ['Transfer Amount', formatCurrency(transaction.amount)],
+        ['Base Outbound Fee', formatCurrency(feeBreakdown?.baseOutboundFeeUsd || 0)],
+        ...(feeBreakdown?.corridorSurchargeUsd ? [['Corridor Surcharge', formatCurrency(feeBreakdown.corridorSurchargeUsd)]] : []),
+        ['Exchange Spread', `${feeBreakdown?.exchangeSpreadPercent || 0}% (${formatCurrency(feeBreakdown?.exchangeSpreadUsd || 0)})`],
+        ['Sender Intermediary Fee', formatCurrency(feeBreakdown?.senderIntermediaryFeeUsd || 0)],
+        ['Beneficiary Intermediary Deduction', formatCurrency(feeBreakdown?.beneficiaryIntermediaryDeductionUsd || 0)],
+        ['Total Fees', transaction.status === 'COMPLETED' ? formatCurrency(wireFee) : transaction.status === 'PENDING' ? `${formatCurrency(wireFee)} estimated; not charged` : 'Not charged'],
+        [transaction.status === 'PENDING' ? 'Estimated Total Sender Cost' : 'Total Debited', transaction.status === 'COMPLETED' ? `-${formatCurrency(transaction.amount + wireFee)}` : transaction.status === 'PENDING' ? `${formatCurrency(transaction.amount + wireFee)}; not debited` : 'Not debited'],
+        ...(wireMetadata.resolution?.externalReference ? [['Bank Confirmation Reference', wireMetadata.resolution.externalReference]] : []),
+      ] : [['Amount', `${sign}${formatCurrency(transaction.amount)}`]]),
       ['Description',      transaction.description],
       ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
       ...(!isTransferIn && transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
@@ -99,7 +124,7 @@ export default function ReceiptPage() {
       <div class="amount">${sign}${formatCurrency(transaction.amount)}</div>
       <div class="subtitle">${formatDateTime(transaction.createdAt)}</div>
     </div>
-    <div class="status-bar">✓ Transaction Successful</div>
+    <div class="status-bar" style="background:${isPending ? '#B7791F' : '#1A8C4E'}">${statusLabel}</div>
     <div class="body">
       ${rows.map(([l, v]) => `
         <div class="row ${l === 'Amount' ? 'amount-row' : ''}">
@@ -162,14 +187,31 @@ export default function ReceiptPage() {
   const isCredit = ['CREDIT','TRANSFER_IN','ADMIN_CREDIT','DEPOSIT'].includes(transaction.type);
   const isTransferIn = transaction.type === 'TRANSFER_IN';
   const isTransferOut = transaction.type === 'TRANSFER_OUT';
-  const sign     = isCredit ? '+' : '-';
-  const amtColor = isCredit ? 'text-citi-green' : 'text-citi-red';
+  const isPending = transaction.status === 'PENDING';
+  const wireMetadata = getWireMetadata(transaction);
+  const wireFee = typeof wireMetadata?.estimatedFeeUsd === 'number' ? wireMetadata.estimatedFeeUsd : 0;
+  const feeBreakdown = wireMetadata?.feeBreakdown;
+  const sign     = isPending ? '' : isCredit ? '+' : '-';
+  const amtColor = isPending ? 'text-yellow-700' : isCredit ? 'text-citi-green' : 'text-citi-red';
+  const statusLabel = isPending ? 'Pending Review' : transaction.status === 'COMPLETED' ? 'Transaction Successful' : transaction.status;
 
   const rows = [
     ['Reference Number', transaction.reference],
     ['Transaction Type', getDisplayTransactionType(transaction.type)],
     ['Status',           transaction.status],
-    ['Amount',           `${sign}${formatCurrency(transaction.amount)}`],
+    ...(wireMetadata ? [
+      ['Transfer Amount', formatCurrency(transaction.amount)],
+      ['Transfer Method', wireMetadata.transferMethod === 'URGENT_SWIFT' ? 'Urgent SWIFT' : 'Standard SWIFT'],
+      ['Billing Instruction', wireMetadata.billingInstruction || 'SHA'],
+      ['Base Outbound Fee', formatCurrency(feeBreakdown?.baseOutboundFeeUsd || 0)],
+      ...(feeBreakdown?.corridorSurchargeUsd ? [['Corridor Surcharge', formatCurrency(feeBreakdown.corridorSurchargeUsd)]] : []),
+      ['Exchange Spread', `${feeBreakdown?.exchangeSpreadPercent || 0}% (${formatCurrency(feeBreakdown?.exchangeSpreadUsd || 0)})`],
+      ['Sender Intermediary Fee', formatCurrency(feeBreakdown?.senderIntermediaryFeeUsd || 0)],
+      ['Beneficiary Intermediary Deduction', formatCurrency(feeBreakdown?.beneficiaryIntermediaryDeductionUsd || 0)],
+      ['Total Fees', transaction.status === 'COMPLETED' ? formatCurrency(wireFee) : transaction.status === 'PENDING' ? `${formatCurrency(wireFee)} estimated; not charged` : 'Not charged'],
+      [transaction.status === 'PENDING' ? 'Estimated Total Sender Cost' : 'Total Debited', transaction.status === 'COMPLETED' ? `-${formatCurrency(transaction.amount + wireFee)}` : transaction.status === 'PENDING' ? `${formatCurrency(transaction.amount + wireFee)}; not debited` : 'Not debited'],
+      ...(wireMetadata.resolution?.externalReference ? [['Bank Confirmation Reference', wireMetadata.resolution.externalReference]] : []),
+    ] : [['Amount', `${sign}${formatCurrency(transaction.amount)}`]]),
     ['Description',      transaction.description],
     ...(getCreditedBy(transaction) ? [['Credited By', getCreditedBy(transaction)]] : []),
     ...(!isTransferIn && transaction.recipientName ? [['Recipient Name', transaction.recipientName]] : []),
@@ -211,7 +253,7 @@ export default function ReceiptPage() {
             <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
           </div>
           <p className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wide mb-1 sm:mb-2">
-            Transaction {isCredit ? 'Received' : 'Sent'}
+            {isPending ? 'International Wire Request' : `Transaction ${isCredit ? 'Received' : 'Sent'}`}
           </p>
           <p className={`text-2xl sm:text-4xl font-black break-all ${isCredit ? 'text-green-300' : 'text-white'}`}>
             {sign}{formatCurrency(transaction.amount)}
@@ -220,9 +262,9 @@ export default function ReceiptPage() {
         </div>
 
         {/* Status bar */}
-        <div className="bg-citi-red flex items-center justify-center gap-1.5 py-1.5 sm:gap-2 sm:py-2.5">
-          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-          <span className="text-white text-xs sm:text-sm font-bold">Transaction Successful</span>
+        <div className={`${isPending ? 'bg-yellow-700' : 'bg-citi-green'} flex items-center justify-center gap-1.5 py-1.5 sm:gap-2 sm:py-2.5`}>
+          {isPending ? <span className="text-white" aria-hidden="true">…</span> : <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
+          <span className="text-white text-xs sm:text-sm font-bold">{isPending ? 'Pending Review · No Funds Debited' : statusLabel}</span>
         </div>
 
         {/* Details */}
@@ -232,8 +274,8 @@ export default function ReceiptPage() {
               <div key={label} className="flex justify-between items-start py-1 sm:py-3.5 gap-2 sm:gap-3">
                 <span className="text-[11px] sm:text-sm text-citi-gray-400 font-medium flex-shrink-0">{label}</span>
                 <span className={`text-[11px] sm:text-sm font-semibold text-right break-all min-w-0 ${
-                  label === 'Amount' ? amtColor :
-                  label === 'Status' ? 'text-citi-green' :
+                  label === 'Amount' || label === 'Total Debited' || label === 'Estimated Total Sender Cost' ? amtColor :
+                  label === 'Status' ? isPending ? 'text-yellow-700' : 'text-citi-green' :
                   label === 'Reference Number' ? 'font-mono text-citi-blue text-xs' :
                   'text-citi-gray-800'
                 }`}>
@@ -272,7 +314,7 @@ export default function ReceiptPage() {
       </Button>
 
       <p className="text-xs text-citi-gray-400 text-center mt-3">
-        A copy has been sent to your registered email address.
+        {isPending ? 'This wire request is pending review; no transfer receipt email has been sent.' : 'A copy has been sent to your registered email address.'}
       </p>
     </div>
   );

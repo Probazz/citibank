@@ -4,21 +4,64 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { calculateInternationalTransferFees, type BillingInstruction, type TransferMethod } from '@/lib/international-transfer-fees';
 
 function generateReference() {
   return `CTB${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
 
+const INTERNATIONAL_CURRENCIES = [
+  'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'SGD', 'INR', 'NGN', 'MXN',
+  'BRL', 'CNY', 'KRW', 'NZD', 'ZAR', 'NOK', 'SEK', 'DKK', 'PLN', 'TRY', 'AED', 'SAR', 'HKD',
+] as const;
+
 const transferSchema = z.object({
   recipientAccountNumber: z.string().min(6),
-  recipientRoutingNumber: z.string().regex(/^\d{9}$/),
-  mode:                   z.enum(['citi', 'external']),
+  recipientRoutingNumber: z.string().regex(/^\d{9}$/).or(z.literal('')).optional(),
+  mode:                   z.enum(['citi', 'external', 'international']),
   recipientName:          z.string().optional(),
   recipientBank:          z.string().optional(),
+  recipientCountry:       z.string().optional(),
+  recipientAddress:       z.string().optional(),
+  bankCountry:            z.string().optional(),
+  bankAddress:            z.string().optional(),
+  swiftCode:              z.string().optional(),
+  currency:               z.enum(INTERNATIONAL_CURRENCIES).optional(),
+  transferMethod:         z.enum(['STANDARD_SWIFT', 'URGENT_SWIFT']).optional(),
+  billingInstruction:     z.enum(['OUR', 'BEN', 'SHA']).optional(),
+  intermediaryBank:       z.string().optional(),
   amount:                 z.number().positive().min(1).max(5000000),
   description:            z.string().min(1),
   note:                   z.string().optional(),
   pin:                    z.string().length(4),
+}).superRefine((data, context) => {
+  if (data.mode !== 'international' && !data.recipientRoutingNumber) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'A valid 9-digit routing number is required.' });
+  }
+  if (data.mode === 'external' && (!data.recipientName?.trim() || !data.recipientBank?.trim())) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'Recipient name and bank are required.' });
+  }
+  if (data.mode === 'international') {
+    if (!/^[A-Za-z0-9]{6,34}$/.test(data.recipientAccountNumber)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid beneficiary account number or IBAN.' });
+    }
+    const requiredFields = [
+      data.recipientName,
+      data.recipientCountry,
+      data.recipientAddress,
+      data.recipientBank,
+      data.bankCountry,
+      data.bankAddress,
+      data.swiftCode,
+      data.currency,
+    ];
+    if (requiredFields.some(value => !value?.trim())) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Complete all required international wire details.' });
+    }
+    if (data.swiftCode && !/^[A-Za-z0-9]{8}(?:[A-Za-z0-9]{3})?$/.test(data.swiftCode)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid 8- or 11-character SWIFT/BIC.' });
+    }
+  }
 });
 
 // ── GET — transaction history ─────────────────────────────────
@@ -100,7 +143,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Check balance ─────────────────────────────────────────
-    if (sender.account.balance < data.amount) {
+    if (data.mode !== 'international' && sender.account.balance < data.amount) {
       return NextResponse.json({
         error: `Insufficient funds. Available balance: $${sender.account.balance.toFixed(2)}`,
       }, { status: 400 });
@@ -109,6 +152,96 @@ export async function POST(req: NextRequest) {
     const senderBalanceBefore = sender.account.balance;
     const senderBalanceAfter  = senderBalanceBefore - data.amount;
     const reference           = generateReference();
+
+    if (data.mode === 'international') {
+      const rateResponse = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' });
+      if (!rateResponse.ok) {
+        return NextResponse.json({ error: 'Live exchange rates are unavailable. Please try again later.' }, { status: 502 });
+      }
+      const rateData = await rateResponse.json();
+      const exchangeRate = rateData.rates?.[data.currency as string];
+      if (typeof exchangeRate !== 'number' || !Number.isFinite(exchangeRate)) {
+        return NextResponse.json({ error: 'An exchange rate for the selected currency is unavailable.' }, { status: 502 });
+      }
+
+      const currencyDigits = new Intl.NumberFormat('en', {
+        style: 'currency',
+        currency: data.currency,
+      }).resolvedOptions().maximumFractionDigits;
+      const feeBreakdown = calculateInternationalTransferFees({
+        principalUsd: data.amount,
+        sourceCurrency: 'USD',
+        destinationCurrency: data.currency!,
+        midMarketRate: exchangeRate,
+        method: (data.transferMethod || 'STANDARD_SWIFT') as TransferMethod,
+        billingInstruction: (data.billingInstruction || 'SHA') as BillingInstruction,
+      });
+      if (sender.account.balance < feeBreakdown.senderTotalCostUsd) {
+        return NextResponse.json({
+          error: `Insufficient funds for the transfer and its estimated fees. Available balance: $${sender.account.balance.toFixed(2)}; estimated total: $${feeBreakdown.senderTotalCostUsd.toFixed(2)}.`,
+        }, { status: 400 });
+      }
+      const estimatedRecipientAmount = Number(feeBreakdown.estimatedBeneficiaryAmount.toFixed(currencyDigits));
+      const estimatedFeeUsd = feeBreakdown.senderTotalCostUsd - data.amount;
+      const metadata = JSON.stringify({
+        transferType: 'INTERNATIONAL_WIRE',
+        recipientAccountNumber: data.recipientAccountNumber,
+        recipientCountry: data.recipientCountry,
+        recipientAddress: data.recipientAddress,
+        bankCountry: data.bankCountry,
+        bankAddress: data.bankAddress,
+        swiftCode: data.swiftCode?.toUpperCase(),
+        currency: data.currency,
+        exchangeRate,
+        estimatedRecipientAmount,
+        sourceCurrency: 'USD',
+        transferMethod: data.transferMethod || 'STANDARD_SWIFT',
+        billingInstruction: data.billingInstruction || 'SHA',
+        feeBreakdown,
+        estimatedFeeUsd,
+        intermediaryBank: data.intermediaryBank,
+      });
+      const description = `International wire request to ${data.recipientName} (${data.currency})`;
+      const [wireRequest] = await prisma.$transaction([
+        prisma.transaction.create({
+          data: {
+            reference,
+            type: 'TRANSFER_OUT',
+            status: 'PENDING',
+            amount: data.amount,
+            balanceBefore: senderBalanceBefore,
+            balanceAfter: senderBalanceBefore,
+            description,
+            note: data.note,
+            recipientName: data.recipientName,
+            recipientBank: data.recipientBank,
+            senderId: session.user.id,
+            metadata,
+          },
+        }),
+        prisma.notification.create({
+          data: {
+            title: 'International wire request received',
+            message: `Your wire request for ${data.currency} ${estimatedRecipientAmount.toFixed(currencyDigits)} is pending review. Estimated total cost: $${feeBreakdown.senderTotalCostUsd.toFixed(2)}. No funds have been sent. Ref: ${reference}`,
+            type: 'info',
+            userId: session.user.id,
+          },
+        }),
+      ]);
+
+      return NextResponse.json({
+        message: 'International wire request submitted for review. No funds have been sent or debited.',
+        reference,
+        newBalance: senderBalanceBefore,
+        transactionId: wireRequest.id,
+        status: 'PENDING',
+        estimatedRecipientAmount,
+        currency: data.currency,
+        exchangeRate,
+        estimatedFeeUsd,
+        feeBreakdown,
+      });
+    }
 
     // ── Check if recipient is a Citi account ──────────────────
     const recipientAccount = await prisma.account.findUnique({

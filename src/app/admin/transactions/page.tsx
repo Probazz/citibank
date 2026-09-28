@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, Edit, Trash2 } from 'lucide-react';
+import { Search, Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { TransactionItem } from '@/components/dashboard/transaction-item';
 import { Modal } from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,16 @@ import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 const TYPES = ['ALL', 'ADMIN_CREDIT', 'ADMIN_DEBIT', 'TRANSFER_OUT', 'TRANSFER_IN', 'WITHDRAWAL', 'CREDIT', 'DEBIT'];
+
+function getInternationalWire(transaction: any) {
+  if (!transaction.metadata) return null;
+  try {
+    const metadata = JSON.parse(transaction.metadata);
+    return metadata.transferType === 'INTERNATIONAL_WIRE' ? metadata : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function AdminTransactionsPage() {
   const router = useRouter();
@@ -24,6 +34,10 @@ export default function AdminTransactionsPage() {
   const [editDesc, setEditDesc] = useState('');
   const [editAmount, setEditAmount] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+  const [resolveTx, setResolveTx] = useState<any>(null);
+  const [resolutionDecision, setResolutionDecision] = useState<'COMPLETED' | 'FAILED'>('COMPLETED');
+  const [externalReference, setExternalReference] = useState('');
+  const [resolutionReason, setResolutionReason] = useState('');
   const { toast, showToast, hideToast } = useToast();
 
   async function load() {
@@ -84,6 +98,37 @@ export default function AdminTransactionsPage() {
     else showToast(data.error || 'Delete failed.', 'error');
   }
 
+  function openWireResolution(transaction: any, decision: 'COMPLETED' | 'FAILED') {
+    setResolveTx(transaction);
+    setResolutionDecision(decision);
+    setExternalReference('');
+    setResolutionReason('');
+  }
+
+  async function resolveWire() {
+    if (!resolveTx) return;
+    setEditLoading(true);
+    const response = await fetch('/api/admin/international-transfers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transactionId: resolveTx.id,
+        decision: resolutionDecision,
+        externalReference,
+        reason: resolutionReason,
+      }),
+    });
+    const data = await response.json();
+    setEditLoading(false);
+    if (response.ok) {
+      showToast(resolutionDecision === 'COMPLETED' ? 'Wire marked completed.' : 'Wire marked failed.', 'success');
+      setResolveTx(null);
+      load();
+    } else {
+      showToast(data.error || 'Unable to resolve wire request.', 'error');
+    }
+  }
+
   const filtered = search
     ? transactions.filter(t =>
         t.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -141,6 +186,31 @@ export default function AdminTransactionsPage() {
           <div>
             {filtered.map(t => (
               <div key={t.id} className="relative group">
+                {(() => {
+                  const wire = getInternationalWire(t);
+                  return wire ? (
+                    <div className="mx-2 mt-3 rounded-lg border border-citi-gray-200 bg-citi-gray-50 p-3 text-xs text-citi-gray-600">
+                      <p className="mb-2 font-semibold text-citi-gray-800">International wire details</p>
+                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        <p>Beneficiary: {t.recipientName || 'Not provided'}</p>
+                        <p>Account / IBAN: {wire.recipientAccountNumber || 'Not provided'}</p>
+                        <p>Beneficiary address: {wire.recipientAddress || 'Not provided'}, {wire.recipientCountry || ''}</p>
+                        <p>Bank: {t.recipientBank || 'Not provided'}</p>
+                        <p>Bank address: {wire.bankAddress || 'Not provided'}, {wire.bankCountry || ''}</p>
+                        <p>SWIFT / BIC: {wire.swiftCode || 'Not provided'}</p>
+                        <p>Payout estimate: {wire.currency || ''} {wire.estimatedRecipientAmount ?? 'Unavailable'}</p>
+                        <p>Method / instruction: {wire.transferMethod || 'STANDARD_SWIFT'} / {wire.billingInstruction || 'SHA'}</p>
+                        <p>Base outbound: {formatCurrency(wire.feeBreakdown?.baseOutboundFeeUsd || 0)}</p>
+                        <p>Corridor surcharge: {formatCurrency(wire.feeBreakdown?.corridorSurchargeUsd || 0)}</p>
+                        <p>Exchange spread: {wire.feeBreakdown?.exchangeSpreadPercent || 0}% ({formatCurrency(wire.feeBreakdown?.exchangeSpreadUsd || 0)})</p>
+                        <p>Sender intermediary: {formatCurrency(wire.feeBreakdown?.senderIntermediaryFeeUsd || 0)}</p>
+                        <p>Beneficiary intermediary deduction: {formatCurrency(wire.feeBreakdown?.beneficiaryIntermediaryDeductionUsd || 0)}</p>
+                        <p>Total sender cost: {formatCurrency(wire.feeBreakdown?.senderTotalCostUsd || 0)}</p>
+                        {wire.intermediaryBank && <p>Intermediary bank: {wire.intermediaryBank}</p>}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
                 <TransactionItem transaction={t} />
 
                 {/* User info row */}
@@ -156,6 +226,22 @@ export default function AdminTransactionsPage() {
 
                   {/* Action buttons */}
                   <div className="ml-auto flex gap-2">
+                    {getInternationalWire(t) && t.status === 'PENDING' && (
+                      <>
+                        <button
+                          onClick={() => openWireResolution(t, 'COMPLETED')}
+                          className="flex items-center gap-1 rounded-lg bg-citi-green-light px-2.5 py-1 text-xs font-medium text-citi-green transition-all hover:bg-citi-green hover:text-white"
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> Mark sent
+                        </button>
+                        <button
+                          onClick={() => openWireResolution(t, 'FAILED')}
+                          className="flex items-center gap-1 rounded-lg bg-citi-red-light px-2.5 py-1 text-xs font-medium text-citi-red transition-all hover:bg-citi-red hover:text-white"
+                        >
+                          <XCircle className="h-3 w-3" /> Mark failed
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => openEdit(t)}
                       className="flex items-center gap-1 text-xs text-citi-blue font-medium bg-citi-blue-50 px-2.5 py-1 rounded-lg hover:bg-citi-blue hover:text-white transition-all"
@@ -275,6 +361,57 @@ export default function AdminTransactionsPage() {
               </Button>
               <Button fullWidth loading={editLoading} onClick={saveEdit}>
                 Save Changes
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!resolveTx}
+        onClose={() => setResolveTx(null)}
+        title={resolutionDecision === 'COMPLETED' ? 'Confirm Wire Was Sent' : 'Mark Wire Not Successful'}
+        size="md"
+      >
+        {resolveTx && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+              This app does not send international wires. Only confirm completion after the transfer has been sent through your bank/provider and you have its confirmation reference.
+            </div>
+            <div className="rounded-lg bg-citi-gray-50 p-3 text-sm">
+              <p><strong>Request:</strong> {resolveTx.reference}</p>
+              <p><strong>Amount:</strong> {formatCurrency(resolveTx.amount)}</p>
+              <p><strong>Beneficiary:</strong> {resolveTx.recipientName || 'Not provided'}</p>
+            </div>
+            {resolutionDecision === 'COMPLETED' ? (
+              <Input
+                label="Bank / Provider Confirmation Reference *"
+                placeholder="External transfer confirmation ID"
+                value={externalReference}
+                onChange={event => setExternalReference(event.target.value)}
+              />
+            ) : (
+              <Input
+                label="Reason the wire was not completed *"
+                placeholder="Explain why the transfer failed"
+                value={resolutionReason}
+                onChange={event => setResolutionReason(event.target.value)}
+              />
+            )}
+            <p className="text-xs text-citi-gray-500">
+              {resolutionDecision === 'COMPLETED'
+                ? `Marking sent will debit the quoted total sender cost of ${formatCurrency(getInternationalWire(resolveTx)?.feeBreakdown?.senderTotalCostUsd || (resolveTx.amount + (getInternationalWire(resolveTx)?.estimatedFeeUsd || 0)))} from the customer balance.`
+                : 'Marking failed will not debit the customer balance.'}
+            </p>
+            <div className="flex gap-3">
+              <Button variant="ghost" fullWidth onClick={() => setResolveTx(null)}>Cancel</Button>
+              <Button
+                fullWidth
+                loading={editLoading}
+                disabled={resolutionDecision === 'COMPLETED' ? !externalReference.trim() : !resolutionReason.trim()}
+                onClick={resolveWire}
+              >
+                {resolutionDecision === 'COMPLETED' ? 'Confirm Sent' : 'Confirm Failed'}
               </Button>
             </div>
           </div>

@@ -24,6 +24,15 @@ const typeConfig: Record<string, { label: string; icon: React.ReactNode; color: 
 export function TransactionItem({ transaction: t, userId, whiteIconBackground = false }: TransactionItemProps) {
   const config = typeConfig[t.type] || typeConfig.CREDIT;
   const isCredit = ['CREDIT', 'TRANSFER_IN', 'ADMIN_CREDIT', 'DEPOSIT'].includes(t.type);
+  let wireFee = 0;
+  let isInternationalWire = false;
+  if (t.type === 'TRANSFER_OUT' && t.metadata) {
+    try {
+      const metadata = JSON.parse(t.metadata);
+      isInternationalWire = metadata.transferType === 'INTERNATIONAL_WIRE';
+      if (isInternationalWire && typeof metadata.estimatedFeeUsd === 'number') wireFee = metadata.estimatedFeeUsd;
+    } catch {}
+  }
   const amountColor = isCredit ? 'text-citi-green' : 'text-citi-gray-800';
   let displayDescription = t.description;
   if (t.type === 'ADMIN_CREDIT' && t.metadata) {
@@ -36,6 +45,9 @@ export function TransactionItem({ transaction: t, userId, whiteIconBackground = 
   if (t.type === 'TRANSFER_OUT' && t.recipientName) {
     displayDescription = t.recipientName;
   }
+  const isPending = t.status === 'PENDING';
+  const isUnsentWire = isInternationalWire && t.status !== 'COMPLETED';
+  const displayedAmount = isInternationalWire && t.status === 'COMPLETED' ? t.amount + wireFee : t.amount;
 
   return (
     <div className="flex items-center gap-4 py-4 border-b border-citi-gray-300 last:border-0 hover:bg-citi-gray-50 px-2 -mx-2 rounded-lg transition-colors cursor-pointer">
@@ -50,9 +62,14 @@ export function TransactionItem({ transaction: t, userId, whiteIconBackground = 
         </div>
       </div>
       <div className="text-right flex-shrink-0 mr-2">
-        <p className={`text-sm font-bold ${amountColor}`}>
-          {isCredit ? '+' : '-'}{formatCurrency(t.amount)}
+        <p className={`text-sm font-bold ${isPending ? 'text-yellow-700' : isUnsentWire ? 'text-citi-red' : amountColor}`}>
+          {isPending ? 'Pending ' : isUnsentWire ? 'Not sent ' : isCredit ? '+' : '-'}{formatCurrency(displayedAmount)}
         </p>
+        {isInternationalWire && wireFee > 0 && (
+          <p className="text-[10px] text-citi-gray-500">
+            {t.status === 'COMPLETED' ? `Includes ${formatCurrency(wireFee)} fee` : `Fee ${formatCurrency(wireFee)} if sent`}
+          </p>
+        )}
         <Badge variant={t.status === 'COMPLETED' ? 'success' : t.status === 'PENDING' ? 'warning' : 'error'}>
           {t.status}
         </Badge>
