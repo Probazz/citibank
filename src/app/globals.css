@@ -98,3 +98,4 @@ body {
 .animate-slide-in { animation: slideIn .3s ease forwards; }
 .checking-details-marquee { animation: checkingDetailsMarquee 12s linear infinite; }
 .account-status-marquee { animation: accountStatusMarquee 12s linear infinite; }
+.account-status-marquee1 { animation: accountStatusMarquee 62s linear infinite; }

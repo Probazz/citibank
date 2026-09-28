@@ -79,7 +79,6 @@ export default function TransferPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || 'Incorrect PIN.');
-        if (data.noPIN) router.push('/dashboard/settings');
         return;
       }
       setStep('confirm');
