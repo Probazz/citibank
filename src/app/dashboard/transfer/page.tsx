@@ -6,10 +6,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
-import { calculateInternationalTransferFees, type BillingInstruction, type TransferMethod } from '@/lib/international-transfer-fees';
 
 type Step = 'form' | 'pin' | 'confirm' | 'success';
-type TransferMode = 'citi' | 'external' | 'international';
+type TransferMode = 'citi' | 'external';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -20,9 +19,6 @@ export default function TransferPage() {
   const [pin, setPin]         = useState('');
   const [reference, setReference]   = useState('');
   const [txId, setTxId]             = useState('');
-  const [wireResult, setWireResult] = useState<any>(null);
-  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
-  const [rateLoading, setRateLoading] = useState(false);
   const [accountStatus, setAccountStatus] = useState<string | null>(null);
   const [showRestrictionNotice, setShowRestrictionNotice] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -31,29 +27,12 @@ export default function TransferPage() {
     recipientRoutingNumber: '',
     recipientName: '',
     recipientBank: '',
-    bankCountry: '',
-    swiftCode: '',
-    currency: 'EUR',
-    transferMethod: 'STANDARD_SWIFT' as TransferMethod,
-    billingInstruction: 'SHA' as BillingInstruction,
-    intermediaryBank: '',
     amount: '',
     description: '',
     note: '',
   });
 
   const update = (f: string, v: string) => setForm(p => ({ ...p, [f]: v }));
-  const internationalFeeQuote = mode === 'international' && exchangeRate && Number(form.amount) > 0
-    ? calculateInternationalTransferFees({
-      principalUsd: Number(form.amount),
-      sourceCurrency: 'USD',
-      destinationCurrency: form.currency,
-      midMarketRate: exchangeRate,
-      method: form.transferMethod,
-      billingInstruction: form.billingInstruction,
-    })
-    : null;
-
   useEffect(() => {
     fetch('/api/dashboard')
       .then(response => response.ok ? response.json() : null)
@@ -62,39 +41,17 @@ export default function TransferPage() {
   }, []);
 
   useEffect(() => {
-    if (mode !== 'international') return;
-    let active = true;
-    setRateLoading(true);
-    fetch(`/api/exchange-rates?symbols=${form.currency}`)
-      .then(response => response.ok ? response.json() : Promise.reject())
-      .then(data => {
-        if (active) setExchangeRate(data.rates?.[0]?.rate ?? null);
-      })
-      .catch(() => { if (active) setExchangeRate(null); })
-      .finally(() => { if (active) setRateLoading(false); });
-    return () => { active = false; };
-  }, [mode, form.currency]);
-
-  useEffect(() => {
     if (step === 'pin' && error) {
       errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [error, step]);
 
   function validateForm() {
-    if (!form.recipientAccountNumber) return 'Please enter an account number or IBAN.';
-    if (mode === 'international') {
-      if (!/^[A-Z0-9]{6,34}$/.test(form.recipientAccountNumber)) return 'Enter a valid account number or IBAN (6-34 letters or digits).';
-      if (!form.recipientName.trim()) return 'Please enter the beneficiary full name.';
-      if (!form.recipientBank.trim()) return 'Please enter the beneficiary bank name.';
-      if (!form.bankCountry.trim()) return 'Please enter the bank country.';
-      if (!/^[A-Z0-9]{8}(?:[A-Z0-9]{3})?$/.test(form.swiftCode)) return 'Enter a valid 8- or 11-character SWIFT/BIC.';
-    } else {
-      if (!/^[0-9]{6,17}$/.test(form.recipientAccountNumber)) return 'Enter a valid account number.';
-      if (!/^[0-9]{9}$/.test(form.recipientRoutingNumber)) return 'Enter a valid 9-digit routing number.';
-      if (mode === 'external' && !form.recipientName) return 'Please enter the recipient name.';
-      if (mode === 'external' && !form.recipientBank) return 'Please enter the bank name.';
-    }
+    if (!form.recipientAccountNumber) return 'Please enter an account number.';
+    if (!/^[0-9]{6,17}$/.test(form.recipientAccountNumber)) return 'Enter a valid account number.';
+    if (!/^[0-9]{9}$/.test(form.recipientRoutingNumber)) return 'Enter a valid 9-digit routing number.';
+    if (mode === 'external' && !form.recipientName) return 'Please enter the recipient name.';
+    if (mode === 'external' && !form.recipientBank) return 'Please enter the bank name.';
     if (!form.amount || parseFloat(form.amount) <= 0) return 'Please enter a valid amount.';
     if (parseFloat(form.amount) > 5000000) return 'Maximum transfer limit is $5,000,000.';
     if (!form.description) return 'Please enter a description.';
@@ -133,7 +90,7 @@ export default function TransferPage() {
 
   async function handleConfirm() {
     if (mode === 'external') {
-      setError('This is not a US Bank account. Select International to make an international transfer.');
+      setError('External bank transfers are not available. Select Citi Account to transfer between Citi accounts.');
       setStep('form');
       return;
     }
@@ -164,7 +121,6 @@ export default function TransferPage() {
       }
       setReference(data.reference);
       setTxId(data.transactionId || '');
-      setWireResult(data);
       router.push(`/dashboard/receipt?id=${data.transactionId || ''}`);
     } catch {
       setError('Something went wrong. Please try again.');
@@ -179,13 +135,13 @@ export default function TransferPage() {
       <div className="bg-white rounded-2xl border border-citi-gray-200 overflow-hidden">
 
         {/* Success header */}
-          <div className={`p-8 text-center text-white ${mode === 'international' ? 'bg-gradient-to-br from-citi-blue to-blue-700' : 'bg-gradient-to-br from-citi-green to-green-600'}`}>
+          <div className="p-8 text-center text-white bg-gradient-to-br from-citi-green to-green-600">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-black mb-1">{mode === 'international' ? 'Transfer Successful!' : 'Transfer Successful!'}</h2>
+          <h2 className="text-2xl font-black mb-1">Transfer Successful!</h2>
           <p className="text-white/80 text-sm">
-            {mode === 'international' ? 'Your international transfer has been processed successfully.' : 'Your money is on its way'}
+            Your money is on its way
           </p>
         </div>
 
@@ -193,21 +149,10 @@ export default function TransferPage() {
         <div className="p-6">
           <div className="space-y-0 divide-y divide-citi-gray-100 mb-6">
             {[
-              [mode === 'international' ? 'Requested Amount (USD)' : 'Amount Sent', formatCurrency(parseFloat(form.amount))],
-              ...(mode === 'international' ? [
-                ['Base Outbound Fee', formatCurrency(wireResult?.feeBreakdown?.baseOutboundFeeUsd ?? internationalFeeQuote?.baseOutboundFeeUsd ?? 0)],
-                ...((wireResult?.feeBreakdown?.corridorSurchargeUsd ?? internationalFeeQuote?.corridorSurchargeUsd ?? 0) > 0
-                  ? [['Corridor Surcharge', formatCurrency(wireResult?.feeBreakdown?.corridorSurchargeUsd ?? internationalFeeQuote?.corridorSurchargeUsd)]]
-                  : []),
-                ['Exchange Spread', `${wireResult?.feeBreakdown?.exchangeSpreadPercent ?? internationalFeeQuote?.exchangeSpreadPercent ?? 0}% (${formatCurrency(wireResult?.feeBreakdown?.exchangeSpreadUsd ?? internationalFeeQuote?.exchangeSpreadUsd ?? 0)})`],
-                ['Sender Intermediary Fee', formatCurrency(wireResult?.feeBreakdown?.senderIntermediaryFeeUsd ?? internationalFeeQuote?.senderIntermediaryFeeUsd ?? 0)],
-                ['Beneficiary Intermediary Deduction', formatCurrency(wireResult?.feeBreakdown?.beneficiaryIntermediaryDeductionUsd ?? internationalFeeQuote?.beneficiaryIntermediaryDeductionUsd ?? 0)],
-                ['Total Sender Cost', formatCurrency(wireResult?.feeBreakdown?.senderTotalCostUsd ?? internationalFeeQuote?.senderTotalCostUsd ?? 0)],
-              ] : []),
+              ['Amount Sent', formatCurrency(parseFloat(form.amount))],
               ['To Account',     form.recipientAccountNumber],
               ...(form.recipientName ? [['Recipient', form.recipientName]] : []),
               ...(form.recipientBank ? [['Bank', form.recipientBank]] : []),
-              ...(mode === 'international' ? [['SWIFT/BIC', form.swiftCode.toUpperCase()]] : []),
               ['Description',    form.description],
               ['Reference',      reference],
               ['Status',        '✓ Completed'],
@@ -215,7 +160,7 @@ export default function TransferPage() {
             ].map(([l, v]) => (
               <div key={l} className="flex justify-between items-center py-3">
                 <span className="text-sm text-citi-gray-400">{l}</span>
-                <span className={`text-sm font-semibold ${l === 'Amount Sent' ? 'text-citi-red' : l === 'Status' ? mode === 'international' ? 'text-yellow-700' : 'text-citi-green' : 'text-citi-gray-800'}`}>
+                <span className={`text-sm font-semibold ${l === 'Amount Sent' ? 'text-citi-red' : l === 'Status' ? 'text-citi-green' : 'text-citi-gray-800'}`}>
                   {v}
                 </span>
               </div>
@@ -223,7 +168,7 @@ export default function TransferPage() {
           </div>
 
           <p className="text-xs text-citi-gray-400 text-center mb-5">
-            {mode === 'international' ? 'This transfer has been completed and is available in your transaction history.' : 'A receipt has been sent to your email address.'}
+            A receipt has been sent to your email address.
           </p>
 
           <div className="flex flex-col gap-3">
@@ -241,10 +186,9 @@ export default function TransferPage() {
               variant="ghost"
               onClick={() => {
                 setStep('form');
-                setForm({ recipientAccountNumber:'', recipientRoutingNumber:'', recipientName:'', recipientBank:'', bankCountry:'', swiftCode:'', currency:'EUR', transferMethod:'STANDARD_SWIFT', billingInstruction:'SHA', intermediaryBank:'', amount:'', description:'', note:'' });
+                setForm({ recipientAccountNumber:'', recipientRoutingNumber:'', recipientName:'', recipientBank:'', amount:'', description:'', note:'' });
                 setPin('');
                 setError('');
-                setWireResult(null);
               }}
             >
               Make Another Transfer
@@ -273,16 +217,10 @@ export default function TransferPage() {
       )}
 
       {error && step !== 'pin' && (
-        error === 'This is not a US Bank account. Select International to make an international transfer.' ? (
-          <p ref={errorRef} role="alert" className="mb-4 text-sm font-medium text-citi-red bg-citi-red-light border border-red-200 rounded-xl p-4">
-            {error}
-          </p>
-        ) : (
-          <div ref={errorRef} role="alert" className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-5">
-            <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
-            <p className="text-sm text-citi-red font-medium">{error}</p>
-          </div>
-        )
+        <div ref={errorRef} role="alert" className="flex items-center gap-3 p-4 bg-citi-red-light border border-red-200 rounded-xl mb-5">
+          <AlertCircle className="w-5 h-5 text-citi-red flex-shrink-0" />
+          <p className="text-sm text-citi-red font-medium">{error}</p>
+        </div>
       )}
 
       <div className="bg-white rounded-2xl border border-citi-gray-200 p-6">
@@ -293,7 +231,7 @@ export default function TransferPage() {
 
             {/* Mode tabs */}
             <div className="flex gap-1 bg-citi-gray-100 p-1 rounded-xl">
-              {(['citi', 'external', 'international'] as const).map(m => (
+              {(['citi', 'external'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
@@ -301,7 +239,7 @@ export default function TransferPage() {
                     mode === m ? 'bg-white text-citi-blue shadow-sm' : 'text-citi-gray-500'
                   }`}
                 >
-                  {m === 'citi' ? '🏦 Citi Account' : m === 'external' ? '🏢 US Bank' : '🌍 International'}
+                  {m === 'citi' ? '🏦 Citi Account' : '🏢 US Bank'}
                 </button>
               ))}
             </div>
@@ -310,48 +248,16 @@ export default function TransferPage() {
               <p className="text-xs text-citi-blue font-medium">
                 {mode === 'citi'
                   ? '✓ Instant transfer to any Citi account'
-                  : mode === 'external'
-                    ? '✓ Transfer to any US bank account (1-3 business days)'
-                    : 'International wire transfer. Exchange amount and fee are estimates; funds will be sent immediately.'}
+                  : 'External bank transfers are not currently available.'}
               </p>
             </div>
 
             <Input
-              label={mode === 'international' ? 'Beneficiary Account Number / IBAN *' : 'Account Number *'}
-              placeholder={mode === 'citi' ? '10-digit Citi account number' : mode === 'international' ? 'Account number or IBAN' : 'Recipient account number'}
+              label="Account Number *"
+              placeholder={mode === 'citi' ? '10-digit Citi account number' : 'Recipient account number'}
               value={form.recipientAccountNumber}
-              onChange={e => update('recipientAccountNumber', mode === 'international' ? e.target.value.replace(/\s/g, '').toUpperCase().slice(0, 34) : e.target.value.replace(/\D/g, ''))}
+              onChange={e => update('recipientAccountNumber', e.target.value.replace(/\D/g, ''))}
             />
-
-            {mode === 'international' && (
-              <>
-                <Input label="Beneficiary Full Name *" placeholder="Name as held by the receiving bank" value={form.recipientName} onChange={e => update('recipientName', e.target.value)} />
-                <Input label="Beneficiary Bank Name *" placeholder="Receiving bank name" value={form.recipientBank} onChange={e => update('recipientBank', e.target.value)} leftIcon={<Building className="w-4 h-4" />} />
-                <Input label="Bank Country *" placeholder="Country where bank is located" value={form.bankCountry} onChange={e => update('bankCountry', e.target.value)} />
-                <Input label="SWIFT / BIC *" placeholder="8 or 11 characters" maxLength={11} value={form.swiftCode} onChange={e => update('swiftCode', e.target.value.replace(/\s/g, '').toUpperCase().slice(0, 11))} hint="Use the receiving bank's SWIFT/BIC code." />
-                <Input label="Intermediary Bank (if required)" placeholder="Intermediary bank name and details" value={form.intermediaryBank} onChange={e => update('intermediaryBank', e.target.value)} />
-                <div>
-                  <label className="citi-label" htmlFor="wire-method">Transfer Method *</label>
-                  <select id="wire-method" className="citi-input" value={form.transferMethod} onChange={e => update('transferMethod', e.target.value)}>
-                    <option value="STANDARD_SWIFT">Standard SWIFT</option>
-                    <option value="URGENT_SWIFT">Urgent SWIFT</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="citi-label" htmlFor="wire-billing">SWIFT Fee Instruction *</label>
-                  <select id="wire-billing" className="citi-input" value={form.billingInstruction} onChange={e => update('billingInstruction', e.target.value)}>
-                    <option value="OUR">OUR - sender pays intermediary fees</option>
-                    <option value="BEN">BEN - beneficiary pays intermediary fees</option>
-                    <option value="SHA">SHA - fees shared</option>
-                  </select>
-                </div>
-                <p className="mt-1 text-xs text-citi-gray-500">
-                  {rateLoading ? 'Loading live exchange estimate…' : internationalFeeQuote
-                    ? `Estimated total cost ${formatCurrency(internationalFeeQuote.senderTotalCostUsd)} including ${internationalFeeQuote.exchangeSpreadPercent}% exchange spread. Beneficiary estimate: ${new Intl.NumberFormat(undefined, { style: 'currency', currency: form.currency }).format(internationalFeeQuote.estimatedBeneficiaryAmount)}.`
-                    : 'Enter an amount to see the estimated transfer costs.'}
-                </p>
-              </>
-            )}
 
             {mode === 'external' && (
               <>
@@ -372,20 +278,18 @@ export default function TransferPage() {
               </>
             )}
 
-            {mode !== 'international' && (
-              <Input
-                label="Routing Number *"
-                placeholder="9-digit routing number"
-                inputMode="numeric"
-                maxLength={9}
-                value={form.recipientRoutingNumber}
-                onChange={e => update('recipientRoutingNumber', e.target.value.replace(/\D/g, '').slice(0, 9))}
-                hint={mode === 'citi' ? 'Use the routing number for the Citi account.' : 'Use the routing number provided by the other bank.'}
-              />
-            )}
+            <Input
+              label="Routing Number *"
+              placeholder="9-digit routing number"
+              inputMode="numeric"
+              maxLength={9}
+              value={form.recipientRoutingNumber}
+              onChange={e => update('recipientRoutingNumber', e.target.value.replace(/\D/g, '').slice(0, 9))}
+              hint={mode === 'citi' ? 'Use the routing number for the Citi account.' : 'Use the routing number provided by the other bank.'}
+            />
 
             <div>
-              <label className="citi-label">{mode === 'international' ? 'Transfer Amount (USD) *' : 'Amount (USD) *'}</label>
+              <label className="citi-label">Amount (USD) *</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-citi-gray-500 font-semibold text-lg">$</span>
                 <input
@@ -403,7 +307,7 @@ export default function TransferPage() {
             </div>
 
             <Input
-              label={mode === 'international' ? 'Transfer Purpose *' : 'Description / Purpose *'}
+              label="Description / Purpose *"
               placeholder="e.g. Rent payment, Invoice #123, Family support"
               value={form.description}
               onChange={e => update('description', e.target.value)}
@@ -529,24 +433,13 @@ export default function TransferPage() {
 
                 <div className="bg-citi-gray-50 rounded-xl overflow-hidden mb-6">
               {[
-                ['To Account / IBAN',  `${form.recipientAccountNumber.slice(-10)}`],
+                ['To Account',  `${form.recipientAccountNumber.slice(-10)}`],
                 ...(form.recipientName ? [['Recipient',  form.recipientName]] : []),
                 ...(form.recipientBank ? [['Bank',       form.recipientBank]] : []),
-                ...(mode === 'international' ? [
-                  ['Bank Country', form.bankCountry],
-                  ['SWIFT / BIC', form.swiftCode],
-                  ['Transfer Method', form.transferMethod === 'URGENT_SWIFT' ? 'Urgent SWIFT' : 'Standard SWIFT'],
-                  ['Fee Instruction', form.billingInstruction],
-                  ['Base Outbound Fee', formatCurrency(internationalFeeQuote?.baseOutboundFeeUsd ?? 0)],
-                  ...(internationalFeeQuote && internationalFeeQuote.corridorSurchargeUsd > 0 ? [['Corridor Surcharge', formatCurrency(internationalFeeQuote.corridorSurchargeUsd)]] : []),
-                  ['Exchange Spread', `${internationalFeeQuote?.exchangeSpreadPercent ?? 0}% (${formatCurrency(internationalFeeQuote?.exchangeSpreadUsd ?? 0)})`],
-                  ['Intermediary Fees', `Network ${formatCurrency(internationalFeeQuote?.intermediaryNetworkFeeUsd ?? 0)}; sender ${formatCurrency(internationalFeeQuote?.senderIntermediaryFeeUsd ?? 0)}; beneficiary ${formatCurrency(internationalFeeQuote?.beneficiaryIntermediaryDeductionUsd ?? 0)}`],
-                  ['Estimated Total Sender Cost', formatCurrency(internationalFeeQuote?.senderTotalCostUsd ?? 0)],
-                ] : []),
                 ['Amount',      formatCurrency(parseFloat(form.amount))],
                 ['Description', form.description],
                 ...(form.note  ? [['Note',        form.note]] : []),
-                ['Transfer Type', mode === 'international' ? 'International Transfer' : mode === 'citi' ? 'Citi Internal Transfer' : 'External Bank Transfer'],
+                ['Transfer Type', mode === 'citi' ? 'Citi Internal Transfer' : 'External Bank Transfer'],
               ].map(([l, v]) => (
                 <div key={l} className="flex justify-between items-start gap-3 px-5 py-3.5 border-b border-citi-gray-200 last:border-0">
                   <span className="text-sm text-citi-gray-500">{l}</span>
@@ -558,15 +451,13 @@ export default function TransferPage() {
                 </div>
 
                 <p className="text-xs text-citi-gray-400 text-center mb-5">
-                  {mode === 'international'
-                    ? 'This transfer will be processed immediately. The displayed fee and payout amounts are estimates.'
-                    : 'By confirming, you authorize this transfer. A receipt will be sent to your email.'}
+                  By confirming, you authorize this transfer. A receipt will be sent to your email.
                 </p>
 
               <div className="flex gap-3">
                 <Button variant="ghost" fullWidth onClick={() => setStep('form')}>Back</Button>
                 <Button onClick={handleConfirm} loading={loading} fullWidth>
-                  {mode === 'international' ? 'Submit Wire Request' : 'Confirm & Send'}
+                  Confirm & Send
                 </Button>
               </div>
               </>

@@ -7,19 +7,6 @@ import { formatCurrency } from '@/lib/utils';
 
 const TYPES = ['ALL', 'CREDIT', 'DEBIT', 'TRANSFER_IN', 'TRANSFER_OUT', 'WITHDRAWAL', 'ADMIN_CREDIT', 'ADMIN_DEBIT'];
 
-function getCompletedTransactionAmount(transaction: any) {
-  if (transaction.status !== 'COMPLETED' || transaction.type !== 'TRANSFER_OUT' || !transaction.metadata) {
-    return transaction.amount;
-  }
-  try {
-    const metadata = JSON.parse(transaction.metadata);
-    if (metadata.transferType === 'INTERNATIONAL_WIRE' && typeof metadata.estimatedFeeUsd === 'number') {
-      return transaction.amount + metadata.estimatedFeeUsd;
-    }
-  } catch {}
-  return transaction.amount;
-}
-
 export default function TransactionsPage() {
   const router = useRouter();
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -53,7 +40,7 @@ export default function TransactionsPage() {
 
   const totalDebits = transactions
     .filter(t => t.status === 'COMPLETED' && ['DEBIT', 'TRANSFER_OUT', 'WITHDRAWAL', 'ADMIN_DEBIT'].includes(t.type))
-    .reduce((s, t) => s + getCompletedTransactionAmount(t), 0);
+    .reduce((s, t) => s + t.amount, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
