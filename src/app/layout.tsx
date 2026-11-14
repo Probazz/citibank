@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Citi — Banking Built For You',
   description: 'Bank anytime, anywhere with Citi online banking.',
+  robots: { index: false, follow: false },
   icons: { icon: '/favicon.ico' },
   verification: {
     google: "VDxjKbXtrHFJQ-8GU-LjfCy-kgwdtzpS6aq9NA7jiTk",
