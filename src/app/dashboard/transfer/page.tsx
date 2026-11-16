@@ -239,7 +239,7 @@ export default function TransferPage() {
                     mode === m ? 'bg-white text-citi-blue shadow-sm' : 'text-citi-gray-500'
                   }`}
                 >
-                  {m === 'citi' ? '🏦 Citi Account' : '🏢 US Bank'}
+                  {m === 'citi' ? '🏦 Citi Account' : '🏢 Other Banks'}
                 </button>
               ))}
             </div>

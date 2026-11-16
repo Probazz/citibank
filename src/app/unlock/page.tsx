@@ -29,7 +29,7 @@ export default function UnlockPage({ searchParams }: UnlockPageProps) {
           Citi Private Preview
         </p>
         <h1 className="text-2xl font-black leading-tight text-citi-gray-800">
-          Private Staging Preview — Authorized Access Only
+          Private Staging Preview — Enter The Code Sent Your Email
         </h1>
         <p className="mt-3 text-sm leading-6 text-citi-gray-500">
           This preview is available to invited team members, investors, and
