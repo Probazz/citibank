@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
     const senderBalanceBefore = sender.account.balance;
     const senderBalanceAfter  = senderBalanceBefore - data.amount;
     const reference           = generateReference();
+    const transactionDate     = new Date();
 
     // ── Check if recipient is a Citi account ──────────────────
     const recipientAccount = await prisma.account.findUnique({
@@ -163,6 +164,7 @@ export async function POST(req: NextRequest) {
             recipientRoutingNumber: recipientAccount.routingNumber,
             senderId:      session.user.id,
             receiverId:    recipientAccount.userId,
+            createdAt:     transactionDate,
           },
         }),
         // Credit recipient
@@ -181,6 +183,7 @@ export async function POST(req: NextRequest) {
             recipientRoutingNumber: sender.account.routingNumber,
             senderId:      session.user.id,
             receiverId:    recipientAccount.userId,
+            createdAt:     transactionDate,
           },
         }),
         // Update sender balance
@@ -200,6 +203,7 @@ export async function POST(req: NextRequest) {
             message: `$${data.amount.toFixed(2)} sent to ${recipientAccount.user.firstName} ${recipientAccount.user.lastName}. Ref: ${reference}`,
             type:    'info',
             userId:  session.user.id,
+            createdAt: transactionDate,
           },
         }),
         // Notify recipient
@@ -209,6 +213,7 @@ export async function POST(req: NextRequest) {
             message: `$${data.amount.toFixed(2)} received from ${sender.firstName} ${sender.lastName}. Ref: ${reference}`,
             type:    'success',
             userId:  recipientAccount.userId,
+            createdAt: transactionDate,
           },
         }),
       ]);
@@ -229,7 +234,7 @@ export async function POST(req: NextRequest) {
             balanceAfter:  senderBalanceAfter,
             recipientName: `${recipientAccount.user.firstName} ${recipientAccount.user.lastName}`,
             recipientBank: 'Citibank, N.A.',
-            date:          new Date(),
+            date:          transactionDate,
           }),
           sendTransactionReceipt({
             email:         recipientAccount.user.email,
@@ -241,13 +246,14 @@ export async function POST(req: NextRequest) {
             balanceAfter:  recipientBalanceAfter,
             recipientName: `${sender.firstName} ${sender.lastName}`,
             recipientBank: 'Citibank, N.A.',
-            date:          new Date(),
+            date:          transactionDate,
           }),
         ]).catch(console.error);
       } catch {}
 
     } else {
       // ── External bank transfer ────────────────────────────
+      const transactionDate = new Date();
       const [outTx] = await prisma.$transaction([
         prisma.transaction.create({
           data: {
@@ -263,6 +269,7 @@ export async function POST(req: NextRequest) {
             recipientBank: data.recipientBank || 'External Bank',
             recipientRoutingNumber: data.recipientRoutingNumber,
             senderId:      session.user.id,
+            createdAt:     transactionDate,
           },
         }),
         prisma.account.update({
@@ -275,6 +282,7 @@ export async function POST(req: NextRequest) {
             message: `$${data.amount.toFixed(2)} sent to ${data.recipientName || 'external account'}. Ref: ${reference}`,
             type:    'info',
             userId:  session.user.id,
+            createdAt: transactionDate,
           },
         }),
       ]);
@@ -294,7 +302,7 @@ export async function POST(req: NextRequest) {
           balanceAfter:  senderBalanceAfter,
           recipientName: data.recipientName || 'External Account',
           recipientBank: data.recipientBank || 'External Bank',
-          date:          new Date(),
+          date:          transactionDate,
         }).catch(console.error);
       } catch {}
     }

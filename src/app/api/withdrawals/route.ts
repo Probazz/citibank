@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
 
     // Hold the funds
     const reference = generateReference();
+    const transactionDate = new Date();
     await prisma.$transaction([
       prisma.account.update({
         where: { id: user.account.id },
@@ -77,14 +78,16 @@ export async function POST(req: NextRequest) {
           balanceAfter: user.account.balance - data.amount,
           description: `Withdrawal to ${data.bankName} - ${data.accountName}`,
           senderId: session.user.id,
+          createdAt: transactionDate,
         },
       }),
       prisma.notification.create({
         data: {
           title: 'Withdrawal Request Submitted',
-          message: `Your withdrawal of $${data.amount.toFixed(2)} is pending admin approval.`,
+          message: `Your withdrawal of $${data.amount.toFixed(2)} is pending admin approval. Ref: ${reference}`,
           type: 'info',
           userId: session.user.id,
+          createdAt: transactionDate,
         },
       }),
     ]);
@@ -99,7 +102,7 @@ export async function POST(req: NextRequest) {
       balanceAfter: user.account.balance - data.amount,
       recipientName: data.accountName,
       recipientBank: data.bankName,
-      date: new Date(),
+      date: transactionDate,
       status: 'Pending admin approval',
     }).catch((error) => {
       console.error('Withdrawal email failed:', error);

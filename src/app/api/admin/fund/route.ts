@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     const balanceBefore = user.account.balance;
     const isCredit      = data.type === 'ADMIN_CREDIT';
     const balanceAfter  = isCredit ? balanceBefore + data.amount : balanceBefore - data.amount;
+    const transactionDate = new Date();
 
     if (!isCredit && balanceAfter < 0)
       return NextResponse.json({ error: `Insufficient balance. Current balance is $${balanceBefore.toFixed(2)}` }, { status: 400 });
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
           metadata: isCredit ? JSON.stringify({ creditedBy }) : undefined,
           senderId: isCredit ? null : data.userId,
           receiverId: isCredit ? data.userId : null,
+          createdAt: transactionDate,
         },
       }),
       prisma.notification.create({
@@ -64,6 +66,7 @@ export async function POST(req: NextRequest) {
           message: `Your account has been ${isCredit?'credited':'debited'} ${isCredit?'+':'-'}$${data.amount.toFixed(2)}. ${data.description}. Ref: ${reference}`,
           type: isCredit ? 'success' : 'warning',
           userId: data.userId,
+          createdAt: transactionDate,
         },
       }),
       prisma.auditLog.create({

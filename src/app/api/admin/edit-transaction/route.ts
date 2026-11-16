@@ -49,15 +49,36 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'No transaction changes provided.' }, { status: 400 });
     }
 
-    const updated = await prisma.transaction.update({ where: { id }, data: updateData });
+    const notificationReference =
+      transaction.type === 'TRANSFER_IN' && transaction.reference.endsWith('-IN')
+        ? transaction.reference.slice(0, -3)
+        : transaction.reference;
+    const notificationUserIds = (
+      transaction.type === 'TRANSFER_IN'
+        ? [transaction.receiverId]
+        : transaction.type === 'TRANSFER_OUT'
+          ? [transaction.senderId]
+          : [transaction.senderId, transaction.receiverId]
+    ).filter((userId): userId is string => Boolean(userId));
+    const notificationDate = updateData.createdAt ?? transaction.createdAt;
 
-    await prisma.auditLog.create({
-      data: {
-        action: 'TRANSACTION_EDITED',
-        details: `Admin edited transaction ${id}. Previous: ${JSON.stringify({ createdAt: transaction.createdAt, description: transaction.description, amount: transaction.amount, status: transaction.status })}. Changes: ${JSON.stringify(updateData)}`,
-        adminId: session.user.id,
-      },
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.transaction.update({ where: { id }, data: updateData }),
+      prisma.notification.updateMany({
+        where: {
+          userId: { in: notificationUserIds },
+          message: { contains: `Ref: ${notificationReference}` },
+        },
+        data: { createdAt: notificationDate },
+      }),
+      prisma.auditLog.create({
+        data: {
+          action: 'TRANSACTION_EDITED',
+          details: `Admin edited transaction ${id}. Previous: ${JSON.stringify({ createdAt: transaction.createdAt, description: transaction.description, amount: transaction.amount, status: transaction.status })}. Changes: ${JSON.stringify(updateData)}`,
+          adminId: session.user.id,
+        },
+      }),
+    ]);
 
     return NextResponse.json({ message: 'Transaction updated.', transaction: updated });
   } catch (err) {
