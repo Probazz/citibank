@@ -26,27 +26,33 @@ export default function LoginPage() {
       return;
     }
 
-    if (res?.error !== 'INVALID_OTP') {
+    if (res?.error === 'INVALID_OTP') {
+      const otpRes = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, type: 'login' }),
+      });
+      const otpData = await otpRes.json();
+      if (!otpRes.ok) {
+        setError(otpData.error || 'Unable to send verification code.');
+        setLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem('citi-login-credentials', JSON.stringify(form));
+      setLoading(false);
+      router.push(`/auth/login/otp?email=${encodeURIComponent(form.email)}`);
+      return;
+    }
+
+    if (res?.error || !res?.ok) {
       setError('Invalid email or password.');
       setLoading(false);
       return;
     }
 
-    const otpRes = await fetch('/api/auth/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: form.email, type: 'login' }),
-    });
-    const otpData = await otpRes.json();
-    if (!otpRes.ok) {
-      setError(otpData.error || 'Unable to send verification code.');
-      setLoading(false);
-      return;
-    }
-
-    sessionStorage.setItem('citi-login-credentials', JSON.stringify(form));
-    setLoading(false);
-    router.push(`/auth/login/otp?email=${encodeURIComponent(form.email)}`);
+    router.push('/');
+    router.refresh();
   }
 
   return (
