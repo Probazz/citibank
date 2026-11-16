@@ -213,8 +213,16 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-bold">{user.firstName[0]}{user.lastName[0]}</span>
+                      <div className="w-9 h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {user.profileImage ? (
+                          <img
+                            src={user.profileImage}
+                            alt={`${user.firstName} ${user.lastName}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white text-xs font-bold">{user.firstName[0]}{user.lastName[0]}</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-citi-gray-800">{user.firstName} {user.lastName}</p>
