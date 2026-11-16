@@ -25,8 +25,11 @@ export default function AdminUsersPage() {
   const [emailUser, setEmailUser] = useState<any>(null);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkEmailOpen, setBulkEmailOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState('');
   const { toast, showToast, hideToast } = useToast();
+  const visibleUsersSelected = users.length > 0 && users.every(user => selectedUserIds.has(user.id));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,6 +97,53 @@ export default function AdminUsersPage() {
     }
   }
 
+  function toggleVisibleUsers() {
+    setSelectedUserIds(current => {
+      const next = new Set(current);
+      if (users.every(user => next.has(user.id))) {
+        users.forEach(user => next.delete(user.id));
+      } else {
+        users.forEach(user => next.add(user.id));
+      }
+      return next;
+    });
+  }
+
+  async function sendBulkEmail() {
+    const userIds = Array.from(selectedUserIds);
+    if (userIds.length === 0) return;
+    setActionLoading('bulk-email');
+    try {
+      const res = await fetch('/api/admin/users/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds, subject: emailSubject, message: emailMessage }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedUserIds(current => {
+          const next = new Set(current);
+          (data.sentUserIds || []).forEach((id: string) => next.delete(id));
+          return next;
+        });
+        setBulkEmailOpen(false);
+        setEmailSubject('');
+        setEmailMessage('');
+        showToast(
+          [data.message, data.auditWarning].filter(Boolean).join(' '),
+          data.failedCount || data.auditWarning ? 'error' : 'success'
+        );
+      } else {
+        showToast(data.error || 'Unable to send emails.', 'error');
+      }
+    } catch (error) {
+      console.error('Admin bulk email request failed:', error);
+      showToast('Unable to send emails. Please try again.', 'error');
+    } finally {
+      setActionLoading('');
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
@@ -103,6 +153,15 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-black text-citi-gray-800">Users Management</h1>
           <p className="text-citi-gray-500 text-sm mt-1">{total} registered users</p>
         </div>
+        {selectedUserIds.size > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-citi-gray-500">{selectedUserIds.size} selected</span>
+            <Button onClick={() => { setEmailSubject(''); setEmailMessage(''); setBulkEmailOpen(true); }}>
+              <Mail className="w-4 h-4" /> Email selected
+            </Button>
+            <Button variant="ghost" onClick={() => setSelectedUserIds(new Set())}>Clear selection</Button>
+          </div>
+        )}
       </div>
 
       <div className="relative max-w-md">
@@ -115,6 +174,16 @@ export default function AdminUsersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-citi-gray-200 bg-citi-gray-50">
+                <th className="px-5 py-3.5 text-left">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all users on this page"
+                    checked={visibleUsersSelected}
+                    onChange={toggleVisibleUsers}
+                    disabled={!visibleUsersSelected && selectedUserIds.size + users.filter(user => !selectedUserIds.has(user.id)).length > 50}
+                    className="h-4 w-4 accent-citi-blue"
+                  />
+                </th>
                 {['User','Account Number','Balance','Status','Joined','Actions'].map(h => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-bold text-citi-gray-500 uppercase tracking-wide">{h}</th>
                 ))}
@@ -122,11 +191,26 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="py-12 text-center"><div className="animate-spin w-8 h-8 border-2 border-citi-blue border-t-transparent rounded-full mx-auto"/></td></tr>
+                <tr><td colSpan={7} className="py-12 text-center"><div className="animate-spin w-8 h-8 border-2 border-citi-blue border-t-transparent rounded-full mx-auto"/></td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={6} className="py-12 text-center text-citi-gray-400 text-sm">No users found</td></tr>
+                <tr><td colSpan={7} className="py-12 text-center text-citi-gray-400 text-sm">No users found</td></tr>
               ) : users.map(user => (
                 <tr key={user.id} className="border-b border-citi-gray-100 hover:bg-citi-gray-50 transition-colors">
+                  <td className="px-5 py-4">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${user.firstName} ${user.lastName}`}
+                      checked={selectedUserIds.has(user.id)}
+                      disabled={!selectedUserIds.has(user.id) && selectedUserIds.size >= 50}
+                      onChange={() => setSelectedUserIds(current => {
+                        const next = new Set(current);
+                        if (next.has(user.id)) next.delete(user.id);
+                        else next.add(user.id);
+                        return next;
+                      })}
+                      className="h-4 w-4 accent-citi-blue"
+                    />
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-citi-blue rounded-full flex items-center justify-center flex-shrink-0">
@@ -272,6 +356,25 @@ export default function AdminUsersPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={bulkEmailOpen} onClose={() => setBulkEmailOpen(false)} title={`Email ${selectedUserIds.size} selected users`} size="lg">
+        <div className="space-y-4">
+          <p className="text-sm text-citi-gray-500">
+            Each selected user receives a separate email. Their email addresses will not be shared with other recipients.
+          </p>
+          <Input label="Subject" placeholder="Enter email subject" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+          <div>
+            <label htmlFor="admin-bulk-email-message" className="citi-label">Message</label>
+            <textarea id="admin-bulk-email-message" rows={9} maxLength={10000} placeholder="Write your message..." value={emailMessage} onChange={e => setEmailMessage(e.target.value)} className="citi-input resize-y" />
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" fullWidth onClick={() => setBulkEmailOpen(false)}>Cancel</Button>
+            <Button fullWidth loading={actionLoading === 'bulk-email'} onClick={sendBulkEmail} disabled={emailSubject.trim().length < 3 || emailMessage.trim().length < 10}>
+              <Mail className="w-4 h-4" /> Send to {selectedUserIds.size} users
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
