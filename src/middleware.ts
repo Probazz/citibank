@@ -7,6 +7,10 @@ const UNLOCK_API_PATH = '/api/unlock';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.next();
+  }
+
   if (
     pathname === UNLOCK_PATH ||
     pathname === UNLOCK_API_PATH ||
