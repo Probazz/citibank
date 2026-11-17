@@ -231,11 +231,13 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
   recipientName?: string; recipientBank?: string; date: Date; status?: string;
 }) {
   const isCredit = ['CREDIT', 'TRANSFER_IN', 'ADMIN_CREDIT', 'DEPOSIT'].includes(type);
+  const isPending = status.toLowerCase().startsWith('pending');
+  const isSimulation = status.toLowerCase().includes('simulation');
   const sign = isCredit ? '+' : '-';
   const color = isCredit ? '#1A8C4E' : '#D22630';
   const content = `
     <h2 class="title">Transaction Confirmation</h2>
-    <p class="text">Hi <strong>${firstName}</strong>, your transaction was processed successfully.</p>
+    <p class="text">Hi <strong>${firstName}</strong>, ${isSimulation ? 'this transfer was recorded as completed in the app simulation. No funds were sent to the external bank.' : isPending ? 'your transaction request was submitted and is pending processing.' : 'your transaction was processed successfully.'}</p>
     <div class="otp-box" style="text-align:left;padding:20px 24px">
       <div style="display:flex;justify-content:space-between;gap:16px;margin-bottom:22px">
         <span style="color:#5F6368">Amount</span>
@@ -254,9 +256,9 @@ export async function sendTransactionReceipt({ email, firstName, amount, type, d
     <a href="${APP_URL}/dashboard/transactions" class="btn">View Transactions →</a>`;
   await sendEmail({
     to: email,
-    subject: `Transaction ${isCredit ? 'Received' : 'Sent'}: ${sign}$${amount.toFixed(2)} — Ref: ${reference}`,
+    subject: `${isSimulation ? 'Simulated Transfer Recorded' : isPending ? 'Transaction Request Pending' : `Transaction ${isCredit ? 'Received' : 'Sent'}`}: ${sign}$${amount.toFixed(2)} — Ref: ${reference}`,
     html: baseTemplate(content),
-    text: `Your transaction of ${sign}$${amount.toFixed(2)} has been processed successfully. Reference: ${reference}`,
+    text: `Your transaction of ${sign}$${amount.toFixed(2)} is ${isSimulation ? 'recorded as completed in the app simulation; no funds were sent to the external bank' : isPending ? 'pending processing' : 'processed successfully'}. Reference: ${reference}`,
   });
 }
 

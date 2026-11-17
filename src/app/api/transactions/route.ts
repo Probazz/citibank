@@ -129,17 +129,17 @@ export async function POST(req: NextRequest) {
         error: 'That account number is not a Citibank account.',
       }, { status: 400 });
     }
-    if (data.mode === 'external') {
-      return NextResponse.json({ error: 'External bank transfers are not available yet.' }, { status: 400 });
-    }
     if (data.mode === 'citi' && recipientAccount && recipientAccount.routingNumber !== data.recipientRoutingNumber) {
       return NextResponse.json({ error: 'The Citibank account number and routing number do not match.' }, { status: 400 });
     }
 
     let transactionId = '';
 
-    if (recipientAccount && recipientAccount.userId !== session.user.id) {
+    if (data.mode === 'citi' && recipientAccount) {
       // ── Internal Citi-to-Citi transfer ────────────────────
+      if (recipientAccount.userId === session.user.id) {
+        return NextResponse.json({ error: 'You cannot transfer to your own account.' }, { status: 400 });
+      }
       if (recipientAccount.status !== 'ACTIVE') {
         return NextResponse.json({ error: 'Recipient account is not active.' }, { status: 400 });
       }
@@ -278,9 +278,9 @@ export async function POST(req: NextRequest) {
         }),
         prisma.notification.create({
           data: {
-            title:   'Transfer Sent ✓',
-            message: `$${data.amount.toFixed(2)} sent to ${data.recipientName || 'external account'}. Ref: ${reference}`,
-            type:    'info',
+            title:   'External Transfer Simulation Completed',
+            message: `$${data.amount.toFixed(2)} transfer to ${data.recipientName || 'external account'} was recorded as completed in the app simulation. No funds were sent to the external bank. Ref: ${reference}`,
+            type:    'success',
             userId:  session.user.id,
             createdAt: transactionDate,
           },
@@ -303,12 +303,15 @@ export async function POST(req: NextRequest) {
           recipientName: data.recipientName || 'External Account',
           recipientBank: data.recipientBank || 'External Bank',
           date:          transactionDate,
+          status:        'Completed in simulation; no external funds sent',
         }).catch(console.error);
       } catch {}
     }
 
     return NextResponse.json({
-      message:       'Transfer successful.',
+      message: data.mode === 'external'
+        ? 'Transfer recorded as completed in the app simulation. No funds were sent to the external bank.'
+        : 'Transfer successful.',
       reference,
       newBalance:    senderBalanceAfter,
       transactionId,

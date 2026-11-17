@@ -89,12 +89,6 @@ export default function TransferPage() {
   }
 
   async function handleConfirm() {
-    if (mode === 'external') {
-      setError('External bank transfers are not available. Select Citi Account to transfer between Citi accounts.');
-      setStep('form');
-      return;
-    }
-
     if (accountStatus === 'FROZEN') {
       setShowRestrictionNotice(true);
       return;
@@ -248,7 +242,7 @@ export default function TransferPage() {
               <p className="text-xs text-citi-blue font-medium">
                 {mode === 'citi'
                   ? '✓ Instant transfer to any Citi account'
-                  : 'External bank transfers are not currently available.'}
+                  : 'Simulation only: the app records this transfer as completed and deducts the amount from your app balance. No funds are sent to the other bank.'}
               </p>
             </div>
 
@@ -451,13 +445,15 @@ export default function TransferPage() {
                 </div>
 
                 <p className="text-xs text-citi-gray-400 text-center mb-5">
-                  By confirming, you authorize this transfer. A receipt will be sent to your email.
+                  {mode === 'citi'
+                    ? 'By confirming, you authorize this transfer. A receipt will be sent to your email.'
+                    : 'This simulation will record the transfer as completed and deduct the amount from your app balance. No real funds will be sent to the other bank.'}
                 </p>
 
               <div className="flex gap-3">
                 <Button variant="ghost" fullWidth onClick={() => setStep('form')}>Back</Button>
                 <Button onClick={handleConfirm} loading={loading} fullWidth>
-                  Confirm & Send
+                  {mode === 'citi' ? 'Confirm & Send' : 'Complete Simulated Transfer'}
                 </Button>
               </div>
               </>
