@@ -8,18 +8,9 @@
 
 html, body { max-width: 100%; overflow-x: hidden; }
 
-@media (min-width: 360px) and (max-width: 420px) {
-  .balance-amount { font-size: 1.6rem; }
-  .checking-balance-amount { font-size: 0.8rem; }
-}
-
-@media (min-width: 421px) and (max-width: 1023px) {
+@media (max-width: 1023px) {
   .balance-amount { font-size: 1.5rem; }
-  .checking-balance-amount { font-size: 1.35rem; }
-}
-
-@media (max-width: 359px) {
-  .checking-balance-amount { font-size: 1.5rem; }
+  .checking-balance-amount { font-size: 0.8rem; }
 }
 
 .checking-balance-amount { font-size: 1.875rem; }
