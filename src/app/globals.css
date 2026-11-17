@@ -10,7 +10,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 @media (min-width: 360px) and (max-width: 420px) {
   .balance-amount { font-size: 1.6rem; }
-  .checking-balance-amount { font-size: 1.4rem; }
+  .checking-balance-amount { font-size: 0.8rem; }
 }
 
 @media (min-width: 421px) and (max-width: 1023px) {

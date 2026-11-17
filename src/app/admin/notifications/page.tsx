@@ -96,7 +96,7 @@ export default function AdminNotificationsPage() {
         ) : (
           <div>
             {notifications.map(notification => (
-              <div key={notification.id} className="flex items-start gap-4 p-5 border-b border-citi-gray-100 last:border-0">
+              <div key={notification.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 p-4 border-b border-citi-gray-100 last:border-0 sm:gap-4 sm:p-5">
                 <div className={cn('px-2 py-1 rounded text-xs font-semibold capitalize flex-shrink-0', typeColors[notification.type] || typeColors.info)}>
                   {notification.type}
                 </div>
@@ -112,8 +112,9 @@ export default function AdminNotificationsPage() {
                     {notification.user.firstName} {notification.user.lastName} ({notification.user.email}) · {formatDateTime(notification.createdAt)}
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => deleteNotification(notification.id)} aria-label={`Delete notification: ${notification.title}`} title="Delete notification">
-                  <Trash2 className="w-4 h-4 text-citi-red" />
+                <Button variant="danger" size="sm" className="flex-shrink-0 px-2 sm:px-3" onClick={() => deleteNotification(notification.id)} aria-label={`Delete notification: ${notification.title}`} title="Delete notification">
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Delete</span>
                 </Button>
               </div>
             ))}

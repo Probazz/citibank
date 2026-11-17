@@ -46,8 +46,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
         </header>
-        <main className="flex-1 p-6 max-w-7xl mx-auto w-full">{children}</main>
-        <footer className="py-4 px-6 border-t border-citi-gray-200 bg-white">
+        <main className="flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:pb-6 max-w-7xl mx-auto w-full">{children}</main>
+        <footer className="px-6 pt-4 pb-24 border-t border-citi-gray-200 bg-white lg:pb-4">
           <p className="text-xs text-citi-gray-400 text-center">
             Citibank Admin Portal — For authorized personnel only. All actions are logged and audited.
           </p>

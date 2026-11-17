@@ -242,7 +242,7 @@ export default function TransferPage() {
               <p className="text-xs text-citi-blue font-medium">
                 {mode === 'citi'
                   ? '✓ Instant transfer to any CitiBank account'
-                  : 'Transfer only: the app records this transfer as completed and deducts the amount from your app balance.'}
+                  : ' It will take the recipient\'s bank to credit the funds.'}
               </p>
             </div>
 
