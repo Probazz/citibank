@@ -241,8 +241,8 @@ export default function TransferPage() {
             <div className="p-3 bg-citi-blue-50 rounded-xl">
               <p className="text-xs text-citi-blue font-medium">
                 {mode === 'citi'
-                  ? '✓ Instant transfer to any Citi account'
-                  : 'Simulation only: the app records this transfer as completed and deducts the amount from your app balance. No funds are sent to the other bank.'}
+                  ? '✓ Instant transfer to any CitiBank account'
+                  : 'Transfer only: the app records this transfer as completed and deducts the amount from your app balance.'}
               </p>
             </div>
 
@@ -444,16 +444,10 @@ export default function TransferPage() {
               ))}
                 </div>
 
-                <p className="text-xs text-citi-gray-400 text-center mb-5">
-                  {mode === 'citi'
-                    ? 'By confirming, you authorize this transfer. A receipt will be sent to your email.'
-                    : 'This simulation will record the transfer as completed and deduct the amount from your app balance. No real funds will be sent to the other bank.'}
-                </p>
-
               <div className="flex gap-3">
                 <Button variant="ghost" fullWidth onClick={() => setStep('form')}>Back</Button>
                 <Button onClick={handleConfirm} loading={loading} fullWidth>
-                  {mode === 'citi' ? 'Confirm & Send' : 'Complete Simulated Transfer'}
+                  {mode === 'citi' ? 'Confirm & Send' : 'Complete Transfer'}
                 </Button>
               </div>
               </>

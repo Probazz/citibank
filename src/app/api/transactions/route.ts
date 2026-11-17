@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     if (data.mode === 'citi' && !recipientAccount) {
       return NextResponse.json({
-        error: 'That account number is not a Citibank account.',
+        error: 'That account number is not a CitiBank account.',
       }, { status: 400 });
     }
     if (data.mode === 'citi' && recipientAccount && recipientAccount.routingNumber !== data.recipientRoutingNumber) {

@@ -230,7 +230,7 @@ export default function DashboardPage() {
                     {hideBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="balance-amount text-3xl font-semibold tracking-tight tabular-nums">
+                <p className="checking-balance-amount font-semibold tracking-tight tabular-nums">
                   {hideBalance ? '$ ••••••' : formatCurrency(account?.balance ?? 0)}
                 </p>
                 <p className="text-blue-200 text-xs mt-1">Available Balance</p>
